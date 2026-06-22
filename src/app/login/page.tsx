@@ -77,7 +77,7 @@ export default function LoginPage() {
       });
 
       if (signUpError) {
-        throw new Error("Gagal membuat akun sesi.");
+        throw new Error(signUpError.message || "Gagal membuat akun sesi.");
       }
     }
 
