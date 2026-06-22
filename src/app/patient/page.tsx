@@ -395,7 +395,7 @@ export default function PatientDashboard() {
           <form onSubmit={handleTakeQueue} className="space-y-6 pt-4">
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none">Pilih profil yang akan mengantri</label>
-              <Select value={selectedPatientId} onValueChange={setSelectedPatientId} required>
+              <Select value={selectedPatientId} onValueChange={(v) => v && setSelectedPatientId(v)} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih Profil Anak" />
                 </SelectTrigger>
