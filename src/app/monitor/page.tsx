@@ -14,6 +14,7 @@ export default function MonitorDisplay() {
   const currentCalledRef = useRef<Record<string, string>>({});
   const [videoUrl, setVideoUrl] = useState<string>("https://www.youtube.com/watch?v=jfKfPfyJRdk");
   const [isAnnouncing, setIsAnnouncing] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   
   const [clinicName, setClinicName] = useState("Klinik Sehat");
   const [tickerText, setTickerText] = useState("Selamat datang di Klinik Sehat. Silakan mengambil nomor antrian melalui aplikasi web di HP Anda. Harap menunggu giliran Anda dipanggil. Selalu patuhi protokol kesehatan di area klinik.");
@@ -130,7 +131,18 @@ export default function MonitorDisplay() {
 
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+    <div className="h-screen bg-black text-white flex flex-col overflow-hidden" onClick={() => !hasInteracted && setHasInteracted(true)}>
+      {!hasInteracted && (
+        <div className="absolute inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center cursor-pointer">
+          <Volume2 className="w-20 h-20 text-blue-500 mb-6 animate-pulse" />
+          <h2 className="text-4xl font-bold text-white mb-4 text-center">Layar Monitor Siap</h2>
+          <p className="text-xl text-slate-300 text-center max-w-lg">
+            Browser memerlukan izin untuk memutar suara. <br/>
+            <span className="text-blue-500 font-semibold">Klik di mana saja</span> pada layar ini untuk memulai.
+          </p>
+        </div>
+      )}
+
       {/* Monitor Header */}
       <header className="px-10 py-6 flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-blue-900 to-black">
         <div className="flex items-center gap-4 text-blue-400">
@@ -152,25 +164,27 @@ export default function MonitorDisplay() {
       <main className="flex-1 p-6 flex gap-6 overflow-hidden">
         {/* YouTube Video Section - 3/4 Width */}
         <div className="w-3/4 h-full rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/10 bg-black relative">
-          <ReactPlayer 
-            url={videoUrl} 
-            playing={!isAnnouncing} 
-            volume={isAnnouncing ? 0 : 1}
-            muted={isAnnouncing}
-            width="100%" 
-            height="100%" 
-            loop={true}
-            config={{
-              youtube: {
-                playerVars: { 
-                  autoplay: 1, 
-                  controls: 0,
-                  disablekb: 1,
-                  modestbranding: 1
+          {hasInteracted && (
+            <ReactPlayer 
+              url={videoUrl} 
+              playing={!isAnnouncing} 
+              volume={isAnnouncing ? 0 : 1}
+              muted={isAnnouncing}
+              width="100%" 
+              height="100%" 
+              loop={true}
+              config={{
+                youtube: {
+                  playerVars: { 
+                    autoplay: 1, 
+                    controls: 0,
+                    disablekb: 1,
+                    modestbranding: 1
+                  }
                 }
-              }
-            } as any}
-          />
+              } as any}
+            />
+          )}
           
           {isAnnouncing && (
             <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm animate-in fade-in duration-300">
