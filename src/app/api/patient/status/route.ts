@@ -4,6 +4,7 @@ import { queues, schedules, doctors, patients } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { and, eq, inArray, desc, sql } from "drizzle-orm";
+import { getWIBDateString } from "@/lib/utils";
 
 export async function GET(req: Request) {
   try {
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getWIBDateString();
 
     // Find user's active queues today or future
     const myQueueResult = await db

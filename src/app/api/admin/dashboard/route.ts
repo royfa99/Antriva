@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { queues, schedules, doctors, user, patients } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getWIBDateString } from "@/lib/utils";
 
 export async function GET() {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getWIBDateString();
 
     const scheds = await db
       .select({

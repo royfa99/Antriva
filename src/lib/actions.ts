@@ -5,6 +5,7 @@ import { queues, doctors, schedules, settings, patients } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { and, eq, sql, inArray } from "drizzle-orm";
+import { getWIBDateString } from "./utils";
 import { eventEmitter } from "@/lib/eventEmitter";
 import { sendWhatsApp } from "@/lib/fonnte";
 import { user } from "@/db/schema";
@@ -99,7 +100,7 @@ export async function callNextQueue(scheduleId: string) {
 
   // Admin check could be here (e.g. check user role)
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getWIBDateString();
 
   // Mark current 'dipanggil' as 'selesai'
   await db.update(queues).set({ status: 'selesai', updatedAt: new Date() })
@@ -166,7 +167,7 @@ export async function recallQueue(scheduleId: string) {
     throw new Error("Unauthorized");
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getWIBDateString();
 
   const current = await db.query.queues.findFirst({
     where: and(
@@ -189,7 +190,7 @@ export async function finishCurrentQueue(scheduleId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) throw new Error("Unauthorized");
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getWIBDateString();
 
   await db.update(queues).set({ status: 'selesai', updatedAt: new Date() })
     .where(and(
@@ -258,7 +259,7 @@ export async function deleteSchedule(scheduleId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) throw new Error("Unauthorized");
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getWIBDateString();
   
   const activeQ = await db.select()
     .from(queues)

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Stethoscope } from "lucide-react";
 import { getMonitorVideo } from "@/lib/actions";
+import { getWIBHour } from "@/lib/utils";
 
 export default function MonitorDisplay() {
   const [dashboardData, setDashboardData] = useState<any[]>([]);
@@ -164,7 +165,7 @@ export default function MonitorDisplay() {
             : dashboardData.filter(item => {
                 // Automatic filtering based on time of day if no manual selection
                 const startHour = parseInt(item.schedule.startTime.split(':')[0]);
-                const currentHour = new Date().getHours();
+                const currentHour = getWIBHour();
                 if (currentHour < 12) {
                   return startHour < 12; // Morning schedules
                 } else {
@@ -218,7 +219,7 @@ export default function MonitorDisplay() {
             ? dashboardData.filter(item => monitorSchedules.includes(item.schedule.id))
             : dashboardData.filter(item => {
                 const startHour = parseInt(item.schedule.startTime.split(':')[0]);
-                const currentHour = new Date().getHours();
+                const currentHour = getWIBHour();
                 return currentHour < 12 ? startHour < 12 : startHour >= 12;
               })
           ).length === 0 && (

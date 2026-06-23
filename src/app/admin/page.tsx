@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getWIBDay } from "@/lib/utils";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -323,7 +324,7 @@ export default function AdminDashboard() {
             </div>
             
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {dashboardData.filter(item => item.schedule.dayInt === new Date().getDay()).map((item) => (
+              {dashboardData.filter(item => item.schedule.dayInt === getWIBDay()).map((item) => (
                 <Card key={item.schedule.id} className="border-t-4 border-t-primary shadow-lg overflow-hidden flex flex-col">
                   <CardHeader className="bg-white pb-4 border-b">
                     <div className="flex justify-between items-start">
@@ -438,7 +439,7 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ))}
-              {dashboardData.filter(item => item.schedule.dayInt === new Date().getDay()).length === 0 && (
+              {dashboardData.filter(item => item.schedule.dayInt === getWIBDay()).length === 0 && (
                 <div className="col-span-full py-12 text-center text-muted-foreground">
                   Belum ada jadwal dokter yang tersedia untuk dipantau.
                 </div>
@@ -516,7 +517,7 @@ export default function AdminDashboard() {
                   <div className="space-y-2">
                     <Label>Sesi Jadwal Ditampilkan di Monitor</Label>
                     <div className="space-y-2 border rounded-md p-4 bg-slate-50 max-h-48 overflow-y-auto">
-                      {dashboardData.filter(item => item.schedule.dayInt === new Date().getDay()).map(item => (
+                      {dashboardData.filter(item => item.schedule.dayInt === getWIBDay()).map(item => (
                         <div key={item.schedule.id} className="flex items-center space-x-2">
                           <input 
                             type="checkbox" 
@@ -536,7 +537,7 @@ export default function AdminDashboard() {
                           </Label>
                         </div>
                       ))}
-                      {dashboardData.filter(item => item.schedule.dayInt === new Date().getDay()).length === 0 && (
+                      {dashboardData.filter(item => item.schedule.dayInt === getWIBDay()).length === 0 && (
                         <p className="text-sm text-muted-foreground">Belum ada jadwal hari ini.</p>
                       )}
                     </div>

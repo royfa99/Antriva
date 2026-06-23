@@ -1,5 +1,6 @@
 "use client";
 
+import { getWIBDateString } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -26,7 +27,7 @@ export default function PatientDashboard() {
   const [isAddingPatient, setIsAddingPatient] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(getWIBDateString());
 
   const [loadingData, setLoadingData] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -348,7 +349,7 @@ export default function PatientDashboard() {
                 type="date" 
                 value={selectedDate} 
                 onChange={(e) => setSelectedDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
+                min={getWIBDateString()}
                 className="w-full"
               />
             </div>
