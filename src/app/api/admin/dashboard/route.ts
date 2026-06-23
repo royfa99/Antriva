@@ -4,6 +4,8 @@ import { queues, schedules, doctors, user, patients } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getWIBDateString } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const today = getWIBDateString();
