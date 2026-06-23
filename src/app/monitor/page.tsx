@@ -6,7 +6,7 @@ import { Stethoscope, Volume2 } from "lucide-react";
 import { getMonitorVideo } from "@/lib/actions";
 import dynamic from 'next/dynamic';
 
-const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false });
+const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
 import { getWIBHour } from "@/lib/utils";
 
 export default function MonitorDisplay() {
