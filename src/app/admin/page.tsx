@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { callNextQueue, recallQueue, finishCurrentQueue, addDoctor, updateDoctor, deleteSchedule, updateSetting } from "@/lib/actions";
-import { LogOut, LayoutDashboard, Users, UserCheck, Stethoscope, Trash2, Edit, Volume2, VolumeX } from "lucide-react";
+import { callNextQueue, recallQueue, finishCurrentQueue, callSpecificQueue, addDoctor, updateDoctor, deleteSchedule, updateSetting } from "@/lib/actions";
+import { LogOut, LayoutDashboard, Users, UserCheck, Stethoscope, Trash2, Edit, Volume2, VolumeX, Hand } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -171,6 +171,16 @@ export default function AdminDashboard() {
       await fetchData();
     } catch (e: any) {
       alert(e.message || "Gagal memanggil antrian berikutnya");
+    }
+  };
+
+  const handleCallSpecific = async (scheduleId: string, queueId: string, queueNumber: number) => {
+    if (!confirm(`Panggil antrian A-${queueNumber} secara manual?`)) return;
+    try {
+      await callSpecificQueue(scheduleId, queueId);
+      await fetchData();
+    } catch (e: any) {
+      alert(e.message || "Gagal memanggil antrian spesifik");
     }
   };
 
@@ -435,14 +445,26 @@ export default function AdminDashboard() {
                                 <TableCell className="font-bold text-slate-700">A-{q.queue.queueNumber}</TableCell>
                                 <TableCell className="font-medium text-slate-900">{q.patient?.name || q.user.name}</TableCell>
                                 <TableCell className="text-right">
-                                  <Badge variant="outline" className={
-                                    q.queue.status === 'menunggu' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                                    q.queue.status === 'dipanggil' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                    q.queue.status === 'selesai' ? 'bg-green-50 text-green-700 border-green-200' :
-                                    'bg-slate-50 text-slate-700 border-slate-200'
-                                  }>
-                                    {q.queue.status}
-                                  </Badge>
+                                  <div className="flex items-center justify-end gap-2">
+                                    {q.queue.status === 'menunggu' && (
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="h-7 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                                        onClick={() => handleCallSpecific(item.schedule.id, q.queue.id, q.queue.queueNumber)}
+                                      >
+                                        <Hand className="w-3 h-3 mr-1" /> Panggil
+                                      </Button>
+                                    )}
+                                    <Badge variant="outline" className={
+                                      q.queue.status === 'menunggu' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                      q.queue.status === 'dipanggil' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                      q.queue.status === 'selesai' ? 'bg-green-50 text-green-700 border-green-200' :
+                                      'bg-slate-50 text-slate-700 border-slate-200'
+                                    }>
+                                      {q.queue.status}
+                                    </Badge>
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             ))

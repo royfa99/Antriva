@@ -159,6 +159,50 @@ export async function callNextQueue(scheduleId: string) {
   return null;
 }
 
+export async function callSpecificQueue(scheduleId: string, queueId: string) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const today = getWIBDateString();
+
+  // Mark current 'dipanggil' as 'selesai'
+  await db.update(queues).set({ status: 'selesai', updatedAt: new Date() })
+    .where(and(
+      eq(queues.scheduleId, scheduleId),
+      eq(queues.status, 'dipanggil'),
+      eq(queues.date, today)
+    ));
+
+  // Find the specific queue to ensure it exists and belongs to today/schedule
+  const specificQueue = await db.query.queues.findFirst({
+    where: and(
+      eq(queues.id, queueId),
+      eq(queues.scheduleId, scheduleId),
+      eq(queues.date, today)
+    )
+  });
+
+  if (!specificQueue) {
+    throw new Error("Antrian tidak ditemukan atau tidak valid.");
+  }
+
+  // Update status to dipanggil
+  await db.update(queues).set({ status: 'dipanggil', updatedAt: new Date() })
+    .where(eq(queues.id, queueId));
+
+  // Note: We skip WhatsApp notifications for manual specific calls to avoid confusion
+  // with the automatic "1 left" tracking system.
+
+  eventEmitter.emit("queue_updated");
+  eventEmitter.emit("queue_called");
+  return specificQueue;
+}
+
 export async function recallQueue(scheduleId: string) {
   const session = await auth.api.getSession({
     headers: await headers(),
