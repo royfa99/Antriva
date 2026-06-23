@@ -14,10 +14,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getWIBDay } from "@/lib/utils";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<any[]>([]);
+  const [recapData, setRecapData] = useState<any[]>([]);
+  const [recapDate, setRecapDate] = useState<string>("today");
   const { data: session, isPending: loadingSession } = authClient.useSession();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -52,6 +55,20 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchRecap = async (date: string) => {
+    try {
+      const res = await fetch(`/api/admin/recap?date=${date}`);
+      const data = await res.json();
+      setRecapData(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecap(recapDate);
+  }, [recapDate]);
+
   useEffect(() => {
     if (loadingSession) return;
     if (!session) {
@@ -80,6 +97,7 @@ export default function AdminDashboard() {
     eventSource.onmessage = (event) => {
       if (event.data === "update") {
         fetchData();
+        fetchRecap(recapDate);
       }
     };
 
@@ -315,6 +333,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="antrian" className="text-lg px-6">Manajemen Antrian</TabsTrigger>
             <TabsTrigger value="dokter" className="text-lg px-6">Manajemen Dokter</TabsTrigger>
             <TabsTrigger value="pengaturan" className="text-lg px-6">Pengaturan</TabsTrigger>
+            <TabsTrigger value="rekapitulasi" className="text-lg px-6">Rekapitulasi</TabsTrigger>
           </TabsList>
 
           <TabsContent value="antrian">
@@ -597,6 +616,48 @@ export default function AdminDashboard() {
                   </Button>
                 </div>
               </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="rekapitulasi">
+            <div className="mb-8 flex justify-between items-end">
+              <div>
+                <h2 className="text-3xl font-bold text-slate-800">Rekapitulasi Pasien</h2>
+                <p className="text-muted-foreground mt-1">Grafik jumlah pendaftar, selesai dilayani, dan batal per sesi praktek.</p>
+              </div>
+              <div className="flex gap-2">
+                <select 
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  value={recapDate}
+                  onChange={(e) => setRecapDate(e.target.value)}
+                >
+                  <option value="today">Hari Ini</option>
+                  <option value="all">Semua Waktu</option>
+                </select>
+              </div>
+            </div>
+
+            <Card className="shadow-lg border-t-4 border-t-primary p-6">
+              <div className="h-[400px] w-full">
+                {recapData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={recapData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="Daftar" fill="#3b82f6" name="Total Daftar" />
+                      <Bar dataKey="Selesai" fill="#22c55e" name="Selesai Dilayani" />
+                      <Bar dataKey="Batal" fill="#ef4444" name="Batal" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Belum ada data antrian untuk ditampilkan.
+                  </div>
+                )}
+              </div>
             </Card>
           </TabsContent>
         </Tabs>
