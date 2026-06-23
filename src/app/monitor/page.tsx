@@ -4,13 +4,15 @@ import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Stethoscope, Volume2 } from "lucide-react";
 import { getMonitorVideo } from "@/lib/actions";
+import dynamic from 'next/dynamic';
+
+const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false });
 import { getWIBHour } from "@/lib/utils";
 
 export default function MonitorDisplay() {
   const [dashboardData, setDashboardData] = useState<any[]>([]);
   const currentCalledRef = useRef<Record<string, string>>({});
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [videoUrl, setVideoUrl] = useState<string>("https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1&loop=1&playlist=jfKfPfyJRdk");
+  const [videoUrl, setVideoUrl] = useState<string>("https://www.youtube.com/watch?v=jfKfPfyJRdk");
   const [isAnnouncing, setIsAnnouncing] = useState(false);
   
   const [clinicName, setClinicName] = useState("Klinik Sehat");
@@ -46,18 +48,16 @@ export default function MonitorDisplay() {
         }
         
         const validIds = extractedIds.filter(Boolean);
-        let finalUrl = "";
+        let finalUrls: string[] = [];
         
-        const origin = typeof window !== "undefined" ? window.location.origin : "";
         if (validIds.length > 0) {
-          const firstId = validIds[0];
-          const playlistIds = validIds.join(',');
-          finalUrl = `https://www.youtube.com/embed/${firstId}?autoplay=1&enablejsapi=1&origin=${origin}&loop=1&playlist=${playlistIds}`;
+          finalUrls = validIds.map(id => `https://www.youtube.com/watch?v=${id}`);
         } else {
-          finalUrl = vUrl + (vUrl.includes('?') ? '&' : '?') + `autoplay=1&enablejsapi=1&origin=${origin}`;
+          finalUrls = [vUrl];
         }
         
-        setVideoUrl(finalUrl);
+        // If there's only one URL, use string. If multiple, use array for playlist.
+        setVideoUrl(finalUrls.length > 1 ? (finalUrls as any) : finalUrls[0]);
       }
       
       const setRes = await fetch("/api/settings");
@@ -94,24 +94,9 @@ export default function MonitorDisplay() {
 
   const lowerVolume = () => {
     setIsAnnouncing(true);
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      console.log("Pausing and muting video for announcement");
-      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "pauseVideo", args: [] }), "*");
-      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "mute", args: [] }), "*");
-      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [0] }), "*");
-      
-      setTimeout(() => {
-        setIsAnnouncing(false);
-        if (iframeRef.current && iframeRef.current.contentWindow) {
-          console.log("Resuming video");
-          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: [] }), "*");
-          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "unMute", args: [] }), "*");
-          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [100] }), "*");
-        }
-      }, 15000);
-    } else {
-      setTimeout(() => setIsAnnouncing(false), 15000);
-    }
+    setTimeout(() => {
+      setIsAnnouncing(false);
+    }, 15000);
   };
 
   useEffect(() => {
@@ -167,18 +152,25 @@ export default function MonitorDisplay() {
       <main className="flex-1 p-6 flex gap-6 overflow-hidden">
         {/* YouTube Video Section - 3/4 Width */}
         <div className="w-3/4 h-full rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/10 bg-black relative">
-          <iframe 
-            ref={iframeRef}
+          <ReactPlayer 
+            url={videoUrl} 
+            playing={!isAnnouncing} 
+            volume={isAnnouncing ? 0 : 1}
+            muted={isAnnouncing}
             width="100%" 
             height="100%" 
-            src={videoUrl} 
-            title="YouTube video player" 
-            frameBorder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-            referrerPolicy="strict-origin-when-cross-origin" 
-            allowFullScreen
-            className="w-full h-full object-cover"
-          ></iframe>
+            loop={true}
+            config={{
+              youtube: {
+                playerVars: { 
+                  autoplay: 1, 
+                  controls: 0,
+                  disablekb: 1,
+                  modestbranding: 1
+                }
+              }
+            }}
+          />
           
           {isAnnouncing && (
             <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm animate-in fade-in duration-300">
