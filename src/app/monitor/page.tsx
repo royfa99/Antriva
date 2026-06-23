@@ -4,15 +4,13 @@ import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Stethoscope, Volume2 } from "lucide-react";
 import { getMonitorVideo } from "@/lib/actions";
-import dynamic from 'next/dynamic';
-
-const ReactPlayer = dynamic(() => import('react-player'), { ssr: false }) as any;
 import { getWIBHour } from "@/lib/utils";
 
 export default function MonitorDisplay() {
   const [dashboardData, setDashboardData] = useState<any[]>([]);
   const currentCalledRef = useRef<Record<string, string>>({});
-  const [videoUrl, setVideoUrl] = useState<string>("https://www.youtube.com/watch?v=jfKfPfyJRdk");
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [videoUrl, setVideoUrl] = useState<string>("https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&enablejsapi=1&loop=1&playlist=jfKfPfyJRdk");
   const [isAnnouncing, setIsAnnouncing] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   
@@ -49,16 +47,18 @@ export default function MonitorDisplay() {
         }
         
         const validIds = extractedIds.filter(Boolean);
-        let finalUrls: string[] = [];
+        let finalUrl = "";
         
+        const origin = typeof window !== "undefined" ? window.location.origin : "";
         if (validIds.length > 0) {
-          finalUrls = validIds.map(id => `https://www.youtube.com/watch?v=${id}`);
+          const firstId = validIds[0];
+          const playlistIds = validIds.join(',');
+          finalUrl = `https://www.youtube.com/embed/${firstId}?autoplay=1&enablejsapi=1&origin=${origin}&loop=1&playlist=${playlistIds}`;
         } else {
-          finalUrls = [vUrl];
+          finalUrl = vUrl + (vUrl.includes('?') ? '&' : '?') + `autoplay=1&enablejsapi=1&origin=${origin}`;
         }
         
-        // If there's only one URL, use string. If multiple, use array for playlist.
-        setVideoUrl(finalUrls.length > 1 ? (finalUrls as any) : finalUrls[0]);
+        setVideoUrl(finalUrl);
       }
       
       const setRes = await fetch("/api/settings");
@@ -95,9 +95,24 @@ export default function MonitorDisplay() {
 
   const lowerVolume = () => {
     setIsAnnouncing(true);
-    setTimeout(() => {
-      setIsAnnouncing(false);
-    }, 15000);
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "pauseVideo", args: [] }), "*");
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "mute", args: [] }), "*");
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [0] }), "*");
+      
+      setTimeout(() => {
+        setIsAnnouncing(false);
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: [] }), "*");
+          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "unMute", args: [] }), "*");
+          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [100] }), "*");
+        }
+      }, 15000);
+    } else {
+      setTimeout(() => {
+        setIsAnnouncing(false);
+      }, 15000);
+    }
   };
 
   useEffect(() => {
@@ -165,25 +180,18 @@ export default function MonitorDisplay() {
         {/* YouTube Video Section - 3/4 Width */}
         <div className="w-3/4 h-full rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/10 bg-black relative">
           {hasInteracted && (
-            <ReactPlayer 
-              url={videoUrl} 
-              playing={!isAnnouncing} 
-              volume={isAnnouncing ? 0 : 1}
-              muted={isAnnouncing}
+            <iframe 
+              ref={iframeRef}
               width="100%" 
               height="100%" 
-              loop={true}
-              config={{
-                youtube: {
-                  playerVars: { 
-                    autoplay: 1, 
-                    controls: 0,
-                    disablekb: 1,
-                    modestbranding: 1
-                  }
-                }
-              } as any}
-            />
+              src={videoUrl} 
+              title="YouTube video player" 
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              referrerPolicy="strict-origin-when-cross-origin" 
+              allowFullScreen
+              className="w-full h-full object-cover"
+            ></iframe>
           )}
           
           {isAnnouncing && (
