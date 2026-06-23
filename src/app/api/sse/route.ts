@@ -18,7 +18,16 @@ export async function GET(req: Request) {
         }
       };
 
+      const onCalled = () => {
+        try {
+          controller.enqueue(encoder.encode(`data: called\n\n`));
+        } catch (e) {
+           // Controller might be closed
+        }
+      };
+
       eventEmitter.on("queue_updated", onUpdate);
+      eventEmitter.on("queue_called", onCalled);
 
       const interval = setInterval(() => {
         try {
@@ -30,6 +39,7 @@ export async function GET(req: Request) {
 
       req.signal.addEventListener("abort", () => {
         eventEmitter.off("queue_updated", onUpdate);
+        eventEmitter.off("queue_called", onCalled);
         clearInterval(interval);
         try { controller.close(); } catch(e){}
       });

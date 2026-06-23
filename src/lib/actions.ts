@@ -151,6 +151,7 @@ export async function callNextQueue(scheduleId: string) {
     }
 
     eventEmitter.emit("queue_updated");
+    eventEmitter.emit("queue_called");
     return nextQueue;
   }
 
@@ -181,6 +182,7 @@ export async function recallQueue(scheduleId: string) {
     await db.update(queues).set({ updatedAt: new Date() })
       .where(eq(queues.id, current.id));
     eventEmitter.emit("queue_updated");
+    eventEmitter.emit("queue_called");
     return true;
   }
   return false;

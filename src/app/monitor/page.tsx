@@ -8,7 +8,6 @@ import { getWIBHour } from "@/lib/utils";
 
 export default function MonitorDisplay() {
   const [dashboardData, setDashboardData] = useState<any[]>([]);
-  const prevDataRef = useRef<any[]>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [videoUrl, setVideoUrl] = useState<string>("https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1&loop=1&playlist=jfKfPfyJRdk");
   
@@ -85,6 +84,9 @@ export default function MonitorDisplay() {
     eventSource.onmessage = (event) => {
       if (event.data === "update") {
         fetchData();
+      } else if (event.data === "called") {
+        lowerVolume();
+        fetchData();
       }
     };
 
@@ -104,25 +106,6 @@ export default function MonitorDisplay() {
     }
   };
 
-  useEffect(() => {
-    if (prevDataRef.current.length > 0) {
-      let isCalled = false;
-      dashboardData.forEach(schedule => {
-        const prevSchedule = prevDataRef.current.find((s: any) => s.schedule.id === schedule.schedule.id);
-        if (prevSchedule) {
-          const currentUpdatedAt = schedule.currentCalled?.queue?.updatedAt;
-          const prevUpdatedAt = prevSchedule.currentCalled?.queue?.updatedAt;
-          if (currentUpdatedAt && currentUpdatedAt !== prevUpdatedAt) {
-            isCalled = true;
-          }
-        }
-      });
-      if (isCalled) {
-        lowerVolume();
-      }
-    }
-    prevDataRef.current = dashboardData;
-  }, [dashboardData]);
 
   return (
     <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
