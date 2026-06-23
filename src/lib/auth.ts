@@ -14,6 +14,8 @@ export const auth = betterAuth({
     "http://localhost:3000", 
     "http://10.67.32.176:3000",
     "http://127.0.0.1:3000",
-    "https://antriva-beta.vercel.app"
-  ],
+    "https://antriva-beta.vercel.app",
+    process.env.NEXT_PUBLIC_APP_URL || "",
+    process.env.BETTER_AUTH_URL || ""
+  ].filter(Boolean),
 });
