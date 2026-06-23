@@ -85,6 +85,9 @@ export default function MonitorDisplay() {
     const eventSource = new EventSource("/api/sse");
     
     eventSource.onmessage = (event) => {
+      if (event.data === "called") {
+        lowerVolume();
+      }
       if (event.data === "update" || event.data === "called") {
         fetchData();
       }
@@ -96,16 +99,18 @@ export default function MonitorDisplay() {
   const lowerVolume = () => {
     setIsAnnouncing(true);
     if (iframeRef.current && iframeRef.current.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "pauseVideo", args: [] }), "*");
-      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "mute", args: [] }), "*");
-      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [0] }), "*");
+      console.log("Pausing video via postMessage");
+      iframeRef.current.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+      iframeRef.current.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+      iframeRef.current.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[0]}', '*');
       
       setTimeout(() => {
         setIsAnnouncing(false);
         if (iframeRef.current && iframeRef.current.contentWindow) {
-          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: [] }), "*");
-          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "unMute", args: [] }), "*");
-          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [100] }), "*");
+          console.log("Resuming video via postMessage");
+          iframeRef.current.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+          iframeRef.current.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+          iframeRef.current.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[100]}', '*');
         }
       }, 15000);
     } else {
