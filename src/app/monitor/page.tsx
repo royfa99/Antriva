@@ -160,6 +160,7 @@ export default function MonitorDisplay() {
             width="100%" 
             height="100%" 
             loop={true}
+            // @ts-ignore
             config={{
               youtube: {
                 playerVars: { 
@@ -167,7 +168,7 @@ export default function MonitorDisplay() {
                   controls: 0,
                   disablekb: 1,
                   modestbranding: 1
-                } as any
+                }
               }
             }}
           />
