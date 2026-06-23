@@ -21,6 +21,8 @@ export default function AdminDashboard() {
   const [dashboardData, setDashboardData] = useState<any[]>([]);
   const [recapData, setRecapData] = useState<any[]>([]);
   const [recapDate, setRecapDate] = useState<string>("today");
+  const [recapStartDate, setRecapStartDate] = useState<string>(getWIBDateString());
+  const [recapEndDate, setRecapEndDate] = useState<string>(getWIBDateString());
   const { data: session, isPending: loadingSession } = authClient.useSession();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -55,9 +57,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchRecap = async (date: string) => {
+  const fetchRecap = async (date: string, start?: string, end?: string) => {
     try {
-      const res = await fetch(`/api/admin/recap?date=${date}`);
+      const url = date === 'range' 
+        ? `/api/admin/recap?date=range&startDate=${start}&endDate=${end}` 
+        : `/api/admin/recap?date=${date}`;
+      const res = await fetch(url);
       const data = await res.json();
       setRecapData(data);
     } catch (e) {
@@ -66,8 +71,8 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchRecap(recapDate);
-  }, [recapDate]);
+    fetchRecap(recapDate, recapStartDate, recapEndDate);
+  }, [recapDate, recapStartDate, recapEndDate]);
 
   useEffect(() => {
     if (loadingSession) return;
@@ -97,7 +102,7 @@ export default function AdminDashboard() {
     eventSource.onmessage = (event) => {
       if (event.data === "update") {
         fetchData();
-        fetchRecap(recapDate);
+        fetchRecap(recapDate, recapStartDate, recapEndDate);
       }
     };
 
@@ -625,15 +630,34 @@ export default function AdminDashboard() {
                 <h2 className="text-3xl font-bold text-slate-800">Rekapitulasi Pasien</h2>
                 <p className="text-muted-foreground mt-1">Grafik jumlah pendaftar, selesai dilayani, dan batal per sesi praktek.</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <select 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  className="flex h-10 w-full sm:w-auto rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                   value={recapDate}
                   onChange={(e) => setRecapDate(e.target.value)}
                 >
                   <option value="today">Hari Ini</option>
+                  <option value="range">Rentang Tanggal</option>
                   <option value="all">Semua Waktu</option>
                 </select>
+                
+                {recapDate === "range" && (
+                  <div className="flex gap-2 items-center mt-2 sm:mt-0">
+                    <Input 
+                      type="date" 
+                      value={recapStartDate} 
+                      onChange={(e) => setRecapStartDate(e.target.value)} 
+                      className="w-auto h-10"
+                    />
+                    <span className="text-muted-foreground">-</span>
+                    <Input 
+                      type="date" 
+                      value={recapEndDate} 
+                      onChange={(e) => setRecapEndDate(e.target.value)} 
+                      className="w-auto h-10"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

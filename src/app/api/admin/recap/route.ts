@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { queues, schedules, doctors } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
 import { getWIBDateString } from "@/lib/utils";
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const dateParam = searchParams.get('date');
-    const targetDate = dateParam === 'all' ? null : (dateParam || getWIBDateString());
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
 
     const scheds = await db
       .select({
@@ -20,15 +21,28 @@ export async function GET(req: Request) {
 
     let allQueues;
     
-    if (targetDate) {
+    if (dateParam === 'range' && startDateParam && endDateParam) {
       allQueues = await db
         .select()
         .from(queues)
-        .where(eq(queues.date, targetDate));
+        .where(
+          and(
+            gte(queues.date, startDateParam),
+            lte(queues.date, endDateParam)
+          )
+        );
     } else {
-      allQueues = await db
-        .select()
-        .from(queues);
+      const targetDate = dateParam === 'all' ? null : (dateParam || getWIBDateString());
+      if (targetDate) {
+        allQueues = await db
+          .select()
+          .from(queues)
+          .where(eq(queues.date, targetDate));
+      } else {
+        allQueues = await db
+          .select()
+          .from(queues);
+      }
     }
 
     const recapData = scheds.map(s => {
