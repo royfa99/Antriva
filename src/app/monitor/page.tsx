@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Stethoscope } from "lucide-react";
+import { Stethoscope, Volume2 } from "lucide-react";
 import { getMonitorVideo } from "@/lib/actions";
 import { getWIBHour } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ export default function MonitorDisplay() {
   const [dashboardData, setDashboardData] = useState<any[]>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [videoUrl, setVideoUrl] = useState<string>("https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1&loop=1&playlist=jfKfPfyJRdk");
+  const [isAnnouncing, setIsAnnouncing] = useState(false);
   
   const [clinicName, setClinicName] = useState("Klinik Sehat");
   const [tickerText, setTickerText] = useState("Selamat datang di Klinik Sehat. Silakan mengambil nomor antrian melalui aplikasi web di HP Anda. Harap menunggu giliran Anda dipanggil. Selalu patuhi protokol kesehatan di area klinik.");
@@ -94,15 +95,24 @@ export default function MonitorDisplay() {
   }, []);
 
   const lowerVolume = () => {
+    setIsAnnouncing(true);
     if (iframeRef.current && iframeRef.current.contentWindow) {
-      console.log("Pausing video for announcement");
-      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "pauseVideo" }), "*");
+      console.log("Pausing and muting video for announcement");
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "pauseVideo", args: [] }), "*");
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "mute", args: [] }), "*");
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [0] }), "*");
+      
       setTimeout(() => {
+        setIsAnnouncing(false);
         if (iframeRef.current && iframeRef.current.contentWindow) {
           console.log("Resuming video");
-          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo" }), "*");
+          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: [] }), "*");
+          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "unMute", args: [] }), "*");
+          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "setVolume", args: [100] }), "*");
         }
       }, 15000);
+    } else {
+      setTimeout(() => setIsAnnouncing(false), 15000);
     }
   };
 
@@ -129,7 +139,7 @@ export default function MonitorDisplay() {
       {/* Monitor Main Content */}
       <main className="flex-1 p-6 flex gap-6 overflow-hidden">
         {/* YouTube Video Section - 3/4 Width */}
-        <div className="w-3/4 h-full rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/10 bg-black">
+        <div className="w-3/4 h-full rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/10 bg-black relative">
           <iframe 
             ref={iframeRef}
             width="100%" 
@@ -142,6 +152,16 @@ export default function MonitorDisplay() {
             allowFullScreen
             className="w-full h-full object-cover"
           ></iframe>
+          
+          {isAnnouncing && (
+            <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm animate-in fade-in duration-300">
+              <div className="text-center">
+                <Volume2 className="w-24 h-24 text-blue-500 mx-auto mb-6 animate-pulse" />
+                <h2 className="text-5xl font-bold tracking-widest text-white mb-4">PANGGILAN ANTRIAN</h2>
+                <p className="text-xl text-blue-200">Harap perhatikan layar dan dengarkan panggilan...</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Queue List Section - 1/4 Width */}
