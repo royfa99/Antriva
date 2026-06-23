@@ -161,7 +161,16 @@ export default function MonitorDisplay() {
         <div className="w-1/4 h-full overflow-y-auto pr-2 pb-6 space-y-6 flex-shrink-0" style={{ scrollbarWidth: 'thin' }}>
           {(monitorSchedules.length > 0 
             ? dashboardData.filter(item => monitorSchedules.includes(item.schedule.id))
-            : dashboardData
+            : dashboardData.filter(item => {
+                // Automatic filtering based on time of day if no manual selection
+                const startHour = parseInt(item.schedule.startTime.split(':')[0]);
+                const currentHour = new Date().getHours();
+                if (currentHour < 12) {
+                  return startHour < 12; // Morning schedules
+                } else {
+                  return startHour >= 12; // Afternoon/Evening schedules
+                }
+              })
           ).map((item) => (
             <Card key={item.schedule.id} className="bg-slate-900 border-slate-800 text-white flex flex-col justify-between overflow-hidden relative group">
               
@@ -207,10 +216,14 @@ export default function MonitorDisplay() {
 
           {(monitorSchedules.length > 0 
             ? dashboardData.filter(item => monitorSchedules.includes(item.schedule.id))
-            : dashboardData
+            : dashboardData.filter(item => {
+                const startHour = parseInt(item.schedule.startTime.split(':')[0]);
+                const currentHour = new Date().getHours();
+                return currentHour < 12 ? startHour < 12 : startHour >= 12;
+              })
           ).length === 0 && (
              <div className="flex items-center justify-center h-full">
-                <p className="text-xl text-slate-600 text-center">Belum ada jadwal dokter hari ini.</p>
+                <p className="text-xl text-slate-600 text-center">Belum ada jadwal dokter yang aktif saat ini.</p>
              </div>
           )}
         </div>

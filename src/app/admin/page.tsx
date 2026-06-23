@@ -540,7 +540,7 @@ export default function AdminDashboard() {
                         <p className="text-sm text-muted-foreground">Belum ada jadwal hari ini.</p>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">Pilih sesi antrian yang ingin dimunculkan di layar monitor. Jika tidak ada yang dicentang, semua jadwal akan ditampilkan.</p>
+                    <p className="text-xs text-muted-foreground">Pilih sesi antrian yang ingin dimunculkan di layar monitor. Jika tidak ada yang dicentang, jadwal akan ditampilkan <b>otomatis berdasarkan waktu</b> (Pagi untuk sebelum jam 12:00, dan Sore/Malam untuk setelah jam 12:00).</p>
                   </div>
                   
                   <div className="space-y-2">
