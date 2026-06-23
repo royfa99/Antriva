@@ -167,7 +167,7 @@ export default function MonitorDisplay() {
                   controls: 0,
                   disablekb: 1,
                   modestbranding: 1
-                }
+                } as any
               }
             }}
           />
