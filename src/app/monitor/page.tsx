@@ -8,6 +8,7 @@ import { getWIBHour } from "@/lib/utils";
 
 export default function MonitorDisplay() {
   const [dashboardData, setDashboardData] = useState<any[]>([]);
+  const currentCalledRef = useRef<Record<string, string>>({});
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [videoUrl, setVideoUrl] = useState<string>("https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1&loop=1&playlist=jfKfPfyJRdk");
   const [isAnnouncing, setIsAnnouncing] = useState(false);
@@ -83,10 +84,7 @@ export default function MonitorDisplay() {
     const eventSource = new EventSource("/api/sse");
     
     eventSource.onmessage = (event) => {
-      if (event.data === "update") {
-        fetchData();
-      } else if (event.data === "called") {
-        lowerVolume();
+      if (event.data === "update" || event.data === "called") {
         fetchData();
       }
     };
@@ -115,6 +113,35 @@ export default function MonitorDisplay() {
       setTimeout(() => setIsAnnouncing(false), 15000);
     }
   };
+
+  useEffect(() => {
+    let triggered = false;
+    const newCalled: Record<string, string> = {};
+
+    dashboardData.forEach(schedule => {
+      const q = schedule.currentCalled?.queue;
+      if (q) {
+        const id = schedule.schedule.id;
+        const currentString = `${q.id}-${q.updatedAt}`;
+        newCalled[id] = currentString;
+        
+        // Check if there was a previous state for this schedule and it changed
+        if (currentCalledRef.current[id] && currentCalledRef.current[id] !== currentString) {
+          triggered = true;
+        }
+      }
+    });
+
+    // Only trigger if this is not the initial load (ref has keys) and a change was detected
+    if (Object.keys(currentCalledRef.current).length > 0 && triggered) {
+      lowerVolume();
+    }
+
+    // Always keep ref updated to the latest state
+    if (dashboardData.length > 0) {
+      currentCalledRef.current = newCalled;
+    }
+  }, [dashboardData]);
 
 
   return (
