@@ -69,6 +69,7 @@ export default function LoginPage() {
     });
 
     if (signInError) {
+      console.error("signInError", signInError);
       // If user doesn't exist, sign up
       const { data: signUpData, error: signUpError } = await authClient.signUp.email({
         email,
@@ -77,7 +78,10 @@ export default function LoginPage() {
       });
 
       if (signUpError) {
-        throw new Error(signUpError.message || "Gagal membuat akun sesi.");
+        console.error("signUpError", signUpError);
+        throw new Error(
+          `Gagal membuat akun sesi. signUpError: ${signUpError.message} | signInError: ${signInError.message}`
+        );
       }
     }
 

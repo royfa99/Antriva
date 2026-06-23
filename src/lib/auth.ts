@@ -10,4 +10,10 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: true,
   },
+  trustedOrigins: [
+    "http://localhost:3000", 
+    "http://10.67.32.176:3000",
+    "http://127.0.0.1:3000",
+    "https://antriva-beta.vercel.app"
+  ],
 });
