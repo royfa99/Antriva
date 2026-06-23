@@ -92,10 +92,10 @@ export default function MonitorDisplay() {
 
   const lowerVolume = () => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
-      iframeRef.current.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[15]}', '*');
+      iframeRef.current.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":[]}', '*');
       setTimeout(() => {
         if (iframeRef.current && iframeRef.current.contentWindow) {
-          iframeRef.current.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[100]}', '*');
+          iframeRef.current.contentWindow.postMessage('{"event":"command","func":"playVideo","args":[]}', '*');
         }
       }, 15000);
     }
