@@ -97,17 +97,13 @@ export default function AdminDashboard() {
       }
     });
     
-    const eventSource = new EventSource("/api/sse");
-    
-    eventSource.onmessage = (event) => {
-      if (event.data === "update") {
-        fetchData();
-        fetchRecap(recapDate, recapStartDate, recapEndDate);
-      }
-    };
+    const interval = setInterval(() => {
+      fetchData();
+      fetchRecap(recapDate, recapStartDate, recapEndDate);
+    }, 3000);
 
-    return () => eventSource.close();
-  }, [session, loadingSession, router]);
+    return () => clearInterval(interval);
+  }, [session, loadingSession, router, recapDate, recapStartDate, recapEndDate]);
 
   useEffect(() => {
     const loadVoices = () => {

@@ -82,18 +82,11 @@ export default function MonitorDisplay() {
 
   useEffect(() => {
     fetchData();
-    const eventSource = new EventSource("/api/sse");
-    
-    eventSource.onmessage = (event) => {
-      if (event.data === "called") {
-        lowerVolume();
-      }
-      if (event.data === "update" || event.data === "called") {
-        fetchData();
-      }
-    };
+    const interval = setInterval(() => {
+      fetchData();
+    }, 3000);
 
-    return () => eventSource.close();
+    return () => clearInterval(interval);
   }, []);
 
   const lowerVolume = () => {
