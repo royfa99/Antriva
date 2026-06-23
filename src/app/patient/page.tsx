@@ -28,6 +28,8 @@ export default function PatientDashboard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>(getWIBDateString());
+  const [clinicName, setClinicName] = useState("Klinik Sehat");
+  const [logoUrl, setLogoUrl] = useState("");
 
   const [loadingData, setLoadingData] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -78,6 +80,11 @@ export default function PatientDashboard() {
     
     fetchData(); // Initial fetch
     fetchPatientsList();
+    
+    fetch("/api/settings").then(r => r.json()).then(data => {
+      if (data.clinic_name) setClinicName(data.clinic_name);
+      if (data.logo_url) setLogoUrl(data.logo_url);
+    }).catch(e => console.error(e));
     
     const eventSource = new EventSource("/api/sse");
     
@@ -176,8 +183,12 @@ export default function PatientDashboard() {
     <div className="min-h-screen bg-muted/30 pb-20">
       <header className="bg-white px-6 py-4 flex items-center justify-between border-b sticky top-0 z-50">
         <div className="flex items-center gap-2 text-primary font-bold text-xl">
-          <Stethoscope className="w-6 h-6" />
-          Klinik Sehat
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="h-8 w-auto object-contain" />
+          ) : (
+            <Stethoscope className="w-6 h-6" />
+          )}
+          {clinicName}
         </div>
         <Button variant="ghost" size="sm" onClick={handleLogout}>
           <LogOut className="w-4 h-4 mr-2" /> Keluar
