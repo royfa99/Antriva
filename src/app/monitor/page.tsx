@@ -47,12 +47,13 @@ export default function MonitorDisplay() {
         const validIds = extractedIds.filter(Boolean);
         let finalUrl = "";
         
+        const origin = typeof window !== "undefined" ? window.location.origin : "";
         if (validIds.length > 0) {
           const firstId = validIds[0];
           const playlistIds = validIds.join(',');
-          finalUrl = `https://www.youtube.com/embed/${firstId}?autoplay=1&enablejsapi=1&loop=1&playlist=${playlistIds}`;
+          finalUrl = `https://www.youtube.com/embed/${firstId}?autoplay=1&enablejsapi=1&origin=${origin}&loop=1&playlist=${playlistIds}`;
         } else {
-          finalUrl = vUrl + (vUrl.includes('?') ? '&' : '?') + 'autoplay=1&enablejsapi=1';
+          finalUrl = vUrl + (vUrl.includes('?') ? '&' : '?') + `autoplay=1&enablejsapi=1&origin=${origin}`;
         }
         
         setVideoUrl(finalUrl);
@@ -92,10 +93,12 @@ export default function MonitorDisplay() {
 
   const lowerVolume = () => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
-      iframeRef.current.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":[]}', '*');
+      console.log("Pausing video for announcement");
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "pauseVideo" }), "*");
       setTimeout(() => {
         if (iframeRef.current && iframeRef.current.contentWindow) {
-          iframeRef.current.contentWindow.postMessage('{"event":"command","func":"playVideo","args":[]}', '*');
+          console.log("Resuming video");
+          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo" }), "*");
         }
       }, 15000);
     }
