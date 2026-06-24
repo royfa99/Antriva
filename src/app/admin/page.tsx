@@ -144,18 +144,16 @@ export default function AdminDashboard() {
     const text = `Nomor antrian, A, ${queueNumber}. Atas nama pasien, ${patientName}. Silakan menuju ruangan, ${doctorName}.`;
     
     try {
-      // Menggunakan Google TTS untuk suara wanita yang jauh lebih jernih dan natural
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=id&q=${encodeURIComponent(text)}`;
-      const audio = new Audio(url);
-      
-      audio.onerror = () => fallbackVoice(text);
-      audio.play().catch(() => fallbackVoice(text));
+      const bell = new Audio('https://assets.mixkit.co/active_storage/sfx/1246/1246-preview.mp3');
+      bell.onended = () => speakText(text);
+      bell.onerror = () => speakText(text);
+      bell.play().catch(() => speakText(text));
     } catch (e) {
-      fallbackVoice(text);
+      speakText(text);
     }
   };
 
-  const fallbackVoice = (text: string) => {
+  const speakText = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
     if (selectedVoiceURI) {
       const voices = window.speechSynthesis.getVoices();
@@ -172,12 +170,15 @@ export default function AdminDashboard() {
   const handleEnableAudio = () => {
     setIsAudioEnabled(true);
     try {
-      const audio = new Audio(`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=id&q=${encodeURIComponent("Sistem pemanggil suara aktif.")}`);
-      audio.play().catch(() => {
+      const bell = new Audio('https://assets.mixkit.co/active_storage/sfx/1246/1246-preview.mp3');
+      const speak = () => {
         const utterance = new SpeechSynthesisUtterance("Sistem pemanggil suara aktif.");
         utterance.lang = "id-ID";
         window.speechSynthesis.speak(utterance);
-      });
+      };
+      bell.onended = speak;
+      bell.onerror = speak;
+      bell.play().catch(speak);
     } catch (e) {}
   };
 
