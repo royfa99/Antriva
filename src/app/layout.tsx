@@ -8,7 +8,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Antrian Pasien - Klinik Sehat",
+  title: "Antrian Pasien - Antriva",
   description: "Aplikasi Pendaftaran Antrian Pasien secara Real-time",
 };
 

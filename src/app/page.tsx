@@ -9,13 +9,8 @@ export default function Home() {
       <header className="px-6 lg:px-14 py-6 flex items-center justify-between border-b bg-white/50 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-2 text-primary">
           <Stethoscope className="w-8 h-8" />
-          <span className="font-bold text-xl tracking-tight">Klinik Sehat</span>
+          <span className="font-bold text-xl tracking-tight">Antriva</span>
         </div>
-        <nav className="flex items-center gap-4">
-          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Login Admin
-          </Link>
-        </nav>
       </header>
 
       {/* Hero Section */}
@@ -71,7 +66,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t py-8 text-center text-muted-foreground">
-        <p>&copy; 2026 Klinik Sehat. All rights reserved.</p>
+        <p>&copy; 2026 Antriva. All rights reserved.</p>
       </footer>
     </div>
   );

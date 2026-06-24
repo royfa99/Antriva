@@ -34,8 +34,8 @@ export default function AdminDashboard() {
   const [docEnd, setDocEnd] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
-  const [clinicName, setClinicName] = useState("Klinik Sehat");
-  const [tickerText, setTickerText] = useState("Selamat datang di Klinik Sehat. Silakan mengambil nomor antrian melalui aplikasi web di HP Anda. Harap menunggu giliran Anda dipanggil. Selalu patuhi protokol kesehatan di area klinik.");
+  const [clinicName, setClinicName] = useState("Antriva");
+  const [tickerText, setTickerText] = useState("Selamat datang di Antriva. Silakan mengambil nomor antrian melalui aplikasi web di HP Anda. Harap menunggu giliran Anda dipanggil. Selalu patuhi protokol kesehatan di area klinik.");
   const [tickerSpeed, setTickerSpeed] = useState("20");
   const [logoUrl, setLogoUrl] = useState("");
   const [monitorSchedules, setMonitorSchedules] = useState<string[]>([]);

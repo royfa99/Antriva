@@ -17,7 +17,7 @@ export async function requestOTP(whatsapp: string, name: string) {
     expiresAt
   });
 
-  const msg = `Halo ${name || "Pasien"},\nIni adalah kode OTP Anda untuk antrian Klinik Sehat: *${otp}*.\n\nKode ini berlaku selama 5 menit. Jangan berikan kode ini kepada siapa pun.`;
+  const msg = `Halo ${name || "Pasien"},\nIni adalah kode OTP Anda untuk antrian Antriva: *${otp}*.\n\nKode ini berlaku selama 5 menit. Jangan berikan kode ini kepada siapa pun.`;
   await sendWhatsApp(whatsapp, msg);
 
   return true;

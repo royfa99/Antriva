@@ -28,7 +28,7 @@ export default function PatientDashboard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>(getWIBDateString());
-  const [clinicName, setClinicName] = useState("Klinik Sehat");
+  const [clinicName, setClinicName] = useState("Antriva");
   const [logoUrl, setLogoUrl] = useState("");
 
   const [loadingData, setLoadingData] = useState(true);
