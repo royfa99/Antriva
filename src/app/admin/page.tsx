@@ -144,7 +144,7 @@ export default function AdminDashboard() {
     const text = `Nomor antrian, A, ${queueNumber}. Atas nama pasien, ${patientName}. Silakan menuju ruangan, ${doctorName}.`;
     
     try {
-      const bell = new Audio('https://assets.mixkit.co/active_storage/sfx/1246/1246-preview.mp3');
+      const bell = new Audio('/bell.ogg');
       bell.onended = () => speakText(text);
       bell.onerror = () => speakText(text);
       bell.play().catch(() => speakText(text));
@@ -180,7 +180,7 @@ export default function AdminDashboard() {
   const handleEnableAudio = () => {
     setIsAudioEnabled(true);
     try {
-      const bell = new Audio('https://assets.mixkit.co/active_storage/sfx/1246/1246-preview.mp3');
+      const bell = new Audio('/bell.ogg');
       const speak = () => {
         const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=id-ID&q=${encodeURIComponent("Sistem pemanggil suara aktif.")}`;
         const audio = new Audio(url);
