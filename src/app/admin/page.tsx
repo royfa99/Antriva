@@ -141,9 +141,22 @@ export default function AdminDashboard() {
   }, [dashboardData, isAudioEnabled]);
 
   const playVoice = (queueNumber: number, doctorName: string, patientName: string) => {
-    const text = `Nomor antrian, A, ${queueNumber}, atas nama, pasien, ${patientName}. Silakan menuju ruangan, ${doctorName}`;
-    const utterance = new SpeechSynthesisUtterance(text);
+    const text = `Nomor antrian, A, ${queueNumber}. Atas nama pasien, ${patientName}. Silakan menuju ruangan, ${doctorName}.`;
     
+    try {
+      // Menggunakan Google TTS untuk suara wanita yang jauh lebih jernih dan natural
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=id&q=${encodeURIComponent(text)}`;
+      const audio = new Audio(url);
+      
+      audio.onerror = () => fallbackVoice(text);
+      audio.play().catch(() => fallbackVoice(text));
+    } catch (e) {
+      fallbackVoice(text);
+    }
+  };
+
+  const fallbackVoice = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
     if (selectedVoiceURI) {
       const voices = window.speechSynthesis.getVoices();
       const voice = voices.find(v => v.voiceURI === selectedVoiceURI);
@@ -151,7 +164,6 @@ export default function AdminDashboard() {
         utterance.voice = voice;
       }
     }
-
     utterance.rate = 0.85; 
     utterance.pitch = 1.1; 
     window.speechSynthesis.speak(utterance);
@@ -159,10 +171,14 @@ export default function AdminDashboard() {
 
   const handleEnableAudio = () => {
     setIsAudioEnabled(true);
-    const utterance = new SpeechSynthesisUtterance("Sistem pemanggil suara aktif.");
-    utterance.lang = "id-ID";
-    utterance.volume = 0.5;
-    window.speechSynthesis.speak(utterance);
+    try {
+      const audio = new Audio(`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=id&q=${encodeURIComponent("Sistem pemanggil suara aktif.")}`);
+      audio.play().catch(() => {
+        const utterance = new SpeechSynthesisUtterance("Sistem pemanggil suara aktif.");
+        utterance.lang = "id-ID";
+        window.speechSynthesis.speak(utterance);
+      });
+    } catch (e) {}
   };
 
   const handleCallNext = async (scheduleId: string) => {
