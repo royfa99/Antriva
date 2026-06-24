@@ -154,11 +154,23 @@ export default function AdminDashboard() {
   };
 
   const speakText = (text: string) => {
-    // Gunakan ResponsiveVoice untuk jaminan suara wanita Indonesia yang jernih
-    if (typeof window !== "undefined" && (window as any).responsiveVoice) {
-      (window as any).responsiveVoice.speak(text, "Indonesian Female", { rate: 0.85, pitch: 1.1 });
-    } else {
-      // Fallback
+    try {
+      // client=gtx ensures the classic Google Translate voice (Indonesian Female)
+      const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=id-ID&q=${encodeURIComponent(text)}`;
+      const audio = new Audio(url);
+      
+      audio.onerror = () => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "id-ID";
+        window.speechSynthesis.speak(utterance);
+      };
+      
+      audio.play().catch(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "id-ID";
+        window.speechSynthesis.speak(utterance);
+      });
+    } catch (e) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "id-ID";
       window.speechSynthesis.speak(utterance);
@@ -170,13 +182,13 @@ export default function AdminDashboard() {
     try {
       const bell = new Audio('https://assets.mixkit.co/active_storage/sfx/1246/1246-preview.mp3');
       const speak = () => {
-        if (typeof window !== "undefined" && (window as any).responsiveVoice) {
-          (window as any).responsiveVoice.speak("Sistem pemanggil suara aktif.", "Indonesian Female");
-        } else {
+        const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=id-ID&q=${encodeURIComponent("Sistem pemanggil suara aktif.")}`;
+        const audio = new Audio(url);
+        audio.play().catch(() => {
           const utterance = new SpeechSynthesisUtterance("Sistem pemanggil suara aktif.");
           utterance.lang = "id-ID";
           window.speechSynthesis.speak(utterance);
-        }
+        });
       };
       bell.onended = speak;
       bell.onerror = speak;

@@ -24,9 +24,6 @@ export default function RootLayout({
       lang="id"
       className={`${outfit.variable} h-full antialiased`}
     >
-      <head>
-        <Script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_KEY" strategy="beforeInteractive" />
-      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
