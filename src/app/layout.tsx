@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   description: "Aplikasi Pendaftaran Antrian Pasien secara Real-time",
 };
 
+import Script from "next/script";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,6 +24,9 @@ export default function RootLayout({
       lang="id"
       className={`${outfit.variable} h-full antialiased`}
     >
+      <head>
+        <Script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_KEY" strategy="beforeInteractive" />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

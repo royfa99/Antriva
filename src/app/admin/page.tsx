@@ -154,17 +154,15 @@ export default function AdminDashboard() {
   };
 
   const speakText = (text: string) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (selectedVoiceURI) {
-      const voices = window.speechSynthesis.getVoices();
-      const voice = voices.find(v => v.voiceURI === selectedVoiceURI);
-      if (voice) {
-        utterance.voice = voice;
-      }
+    // Gunakan ResponsiveVoice untuk jaminan suara wanita Indonesia yang jernih
+    if (typeof window !== "undefined" && (window as any).responsiveVoice) {
+      (window as any).responsiveVoice.speak(text, "Indonesian Female", { rate: 0.85, pitch: 1.1 });
+    } else {
+      // Fallback
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "id-ID";
+      window.speechSynthesis.speak(utterance);
     }
-    utterance.rate = 0.85; 
-    utterance.pitch = 1.1; 
-    window.speechSynthesis.speak(utterance);
   };
 
   const handleEnableAudio = () => {
@@ -172,9 +170,13 @@ export default function AdminDashboard() {
     try {
       const bell = new Audio('https://assets.mixkit.co/active_storage/sfx/1246/1246-preview.mp3');
       const speak = () => {
-        const utterance = new SpeechSynthesisUtterance("Sistem pemanggil suara aktif.");
-        utterance.lang = "id-ID";
-        window.speechSynthesis.speak(utterance);
+        if (typeof window !== "undefined" && (window as any).responsiveVoice) {
+          (window as any).responsiveVoice.speak("Sistem pemanggil suara aktif.", "Indonesian Female");
+        } else {
+          const utterance = new SpeechSynthesisUtterance("Sistem pemanggil suara aktif.");
+          utterance.lang = "id-ID";
+          window.speechSynthesis.speak(utterance);
+        }
       };
       bell.onended = speak;
       bell.onerror = speak;
