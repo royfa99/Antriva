@@ -153,41 +153,50 @@ export default function AdminDashboard() {
     }
   };
 
-  const speakText = (text: string) => {
+  const speakText = async (text: string) => {
     try {
       const url = `/api/tts?text=${encodeURIComponent(text)}`;
-      const audio = new Audio(url);
+      const response = await fetch(url);
       
-      audio.onerror = () => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "id-ID";
-        window.speechSynthesis.speak(utterance);
-      };
+      if (!response.ok) {
+        const errText = await response.text();
+        alert("Peringatan Sistem Suara: " + errText + "\n\nSistem akan menggunakan suara pria sebagai cadangan.");
+        fallbackVoice(text);
+        return;
+      }
+
+      const blob = await response.blob();
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
       
-      audio.play().catch(() => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "id-ID";
-        window.speechSynthesis.speak(utterance);
-      });
+      audio.onerror = () => fallbackVoice(text);
+      audio.play().catch(() => fallbackVoice(text));
     } catch (e) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "id-ID";
-      window.speechSynthesis.speak(utterance);
+      fallbackVoice(text);
     }
+  };
+
+  const fallbackVoice = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "id-ID";
+    window.speechSynthesis.speak(utterance);
   };
 
   const handleEnableAudio = () => {
     setIsAudioEnabled(true);
     try {
       const bell = new Audio('/bell.mp3');
-      const speak = () => {
+      const speak = async () => {
         const url = `/api/tts?text=${encodeURIComponent("Sistem pemanggil suara aktif.")}`;
-        const audio = new Audio(url);
-        audio.play().catch(() => {
-          const utterance = new SpeechSynthesisUtterance("Sistem pemanggil suara aktif.");
-          utterance.lang = "id-ID";
-          window.speechSynthesis.speak(utterance);
-        });
+        const response = await fetch(url);
+        if (!response.ok) {
+          fallbackVoice("Sistem pemanggil suara aktif.");
+          return;
+        }
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        audio.play().catch(() => fallbackVoice("Sistem pemanggil suara aktif."));
       };
       bell.onended = speak;
       bell.onerror = speak;

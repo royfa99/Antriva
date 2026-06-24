@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
       });
 
       if (!response.ok) {
-        throw new Error(`ElevenLabs returned ${response.status}`);
+        const errText = await response.text();
+        throw new Error(`ElevenLabs Error ${response.status}: ${errText}`);
       }
 
       const audioBuffer = await response.arrayBuffer();
@@ -64,8 +65,8 @@ export async function GET(request: NextRequest) {
         "Cache-Control": "public, max-age=31536000",
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("TTS Error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    return new NextResponse(error.message || "Internal Server Error", { status: 500 });
   }
 }
