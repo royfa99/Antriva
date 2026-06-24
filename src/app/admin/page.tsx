@@ -144,7 +144,7 @@ export default function AdminDashboard() {
     const text = `Nomor antrian, A, ${queueNumber}. Atas nama pasien, ${patientName}. Silakan menuju ruangan, ${doctorName}.`;
     
     try {
-      const bell = new Audio('/bell.ogg');
+      const bell = new Audio('/bell.mp3');
       bell.onended = () => speakText(text);
       bell.onerror = () => speakText(text);
       bell.play().catch(() => speakText(text));
@@ -155,8 +155,7 @@ export default function AdminDashboard() {
 
   const speakText = (text: string) => {
     try {
-      // client=gtx ensures the classic Google Translate voice (Indonesian Female)
-      const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=id-ID&q=${encodeURIComponent(text)}`;
+      const url = `/api/tts?text=${encodeURIComponent(text)}`;
       const audio = new Audio(url);
       
       audio.onerror = () => {
@@ -180,9 +179,9 @@ export default function AdminDashboard() {
   const handleEnableAudio = () => {
     setIsAudioEnabled(true);
     try {
-      const bell = new Audio('/bell.ogg');
+      const bell = new Audio('/bell.mp3');
       const speak = () => {
-        const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=id-ID&q=${encodeURIComponent("Sistem pemanggil suara aktif.")}`;
+        const url = `/api/tts?text=${encodeURIComponent("Sistem pemanggil suara aktif.")}`;
         const audio = new Audio(url);
         audio.play().catch(() => {
           const utterance = new SpeechSynthesisUtterance("Sistem pemanggil suara aktif.");
