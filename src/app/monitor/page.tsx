@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Stethoscope, Volume2 } from "lucide-react";
 import { getMonitorVideo } from "@/lib/actions";
-import { getWIBHour } from "@/lib/utils";
+import { getWIBHour, getWIBDay } from "@/lib/utils";
 
 export default function MonitorDisplay() {
   const [dashboardData, setDashboardData] = useState<any[]>([]);
@@ -208,6 +208,7 @@ export default function MonitorDisplay() {
           {(monitorSchedules.length > 0 
             ? dashboardData.filter(item => monitorSchedules.includes(item.schedule.id))
             : dashboardData.filter(item => {
+                if (item.schedule.dayInt !== getWIBDay()) return false;
                 // Automatic filtering based on time of day if no manual selection
                 const startHour = parseInt(item.schedule.startTime.split(':')[0]);
                 const currentHour = getWIBHour();
@@ -263,6 +264,7 @@ export default function MonitorDisplay() {
           {(monitorSchedules.length > 0 
             ? dashboardData.filter(item => monitorSchedules.includes(item.schedule.id))
             : dashboardData.filter(item => {
+                if (item.schedule.dayInt !== getWIBDay()) return false;
                 const startHour = parseInt(item.schedule.startTime.split(':')[0]);
                 const currentHour = getWIBHour();
                 return currentHour < 12 ? startHour < 12 : startHour >= 12;
