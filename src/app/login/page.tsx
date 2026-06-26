@@ -16,7 +16,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
+  const [successMsg, setSuccessMsg] = useState("");
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [password, setPassword] = useState("");
@@ -25,9 +26,23 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setSuccessMsg("");
 
     try {
       const email = `${whatsapp}@klinik.local`;
+
+      if (mode === "forgot") {
+        const { data, error: forgotError } = await authClient.forgetPassword({
+          email,
+          redirectTo: "/reset-password"
+        });
+        if (forgotError) {
+          throw new Error(forgotError.message || "Gagal mengirim permintaan reset password. Pastikan nomor terdaftar.");
+        }
+        setSuccessMsg("Tautan untuk mereset password telah dikirim ke WhatsApp Anda.");
+        setIsLoading(false);
+        return;
+      }
 
       if (mode === "login") {
         const { data, error: signInError } = await authClient.signIn.email({
@@ -79,7 +94,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         
-        <Tabs value={mode} onValueChange={(v) => { setMode(v as "login" | "register"); setError(""); }} className="w-full">
+        <Tabs value={mode === "forgot" ? "login" : mode} onValueChange={(v) => { setMode(v as "login" | "register"); setError(""); setSuccessMsg(""); }} className="w-full">
           <div className="px-6 pb-2">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Masuk</TabsTrigger>
@@ -92,6 +107,17 @@ export default function LoginPage() {
               {error && (
                 <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg border border-destructive/20">
                   {error}
+                </div>
+              )}
+              {successMsg && (
+                <div className="bg-green-500/10 text-green-600 text-sm p-3 rounded-lg border border-green-500/20">
+                  {successMsg}
+                </div>
+              )}
+              
+              {mode === "forgot" && (
+                <div className="text-sm text-muted-foreground mb-4">
+                  Masukkan nomor WhatsApp yang terdaftar. Kami akan mengirimkan tautan untuk mengatur ulang password Anda.
                 </div>
               )}
               
@@ -120,23 +146,37 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  placeholder="••••••••" 
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+              {mode !== "forgot" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    {mode === "login" && (
+                      <button type="button" onClick={() => { setMode("forgot"); setError(""); setSuccessMsg(""); }} className="text-sm text-primary hover:underline">
+                        Lupa password?
+                      </button>
+                    )}
+                  </div>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              )}
             </CardContent>
             
             <CardFooter className="flex flex-col space-y-4 pt-4">
               <Button type="submit" className="w-full text-lg h-12" disabled={isLoading}>
-                {isLoading ? "Memproses..." : (mode === "login" ? "Masuk" : "Daftar")}
+                {isLoading ? "Memproses..." : (mode === "login" ? "Masuk" : mode === "register" ? "Daftar" : "Kirim Link Reset")}
               </Button>
+              {mode === "forgot" && (
+                <button type="button" onClick={() => setMode("login")} className="text-sm text-muted-foreground hover:underline">
+                  Kembali ke Login
+                </button>
+              )}
               <Link href="/" className="text-sm text-center text-muted-foreground hover:underline mt-2 inline-block">
                 Kembali ke Beranda
               </Link>

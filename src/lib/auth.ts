@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db";
+import { sendWhatsApp } from "./fonnte";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -9,6 +10,13 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+    sendResetPassword: async ({ user, url }) => {
+      if (user.email && user.email.endsWith("@klinik.local")) {
+        const whatsapp = user.email.replace("@klinik.local", "");
+        const message = `Halo ${user.name}!\n\nKami menerima permintaan untuk mereset password akun Antrian Klinik Anda.\nSilakan klik tautan di bawah ini untuk membuat password baru:\n\n${url}\n\nJika Anda tidak merasa meminta reset password, abaikan pesan ini.`;
+        await sendWhatsApp(whatsapp, message);
+      }
+    },
   },
   trustedOrigins: [
     "http://localhost:3000", 
