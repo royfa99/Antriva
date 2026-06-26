@@ -32,8 +32,7 @@ export default function LoginPage() {
       const email = `${whatsapp}@klinik.local`;
 
       if (mode === "forgot") {
-        // @ts-ignore
-        const { data, error: forgotError } = await authClient.forgetPassword({
+        const { data, error: forgotError } = await authClient.requestPasswordReset({
           email,
           redirectTo: "/reset-password"
         });
