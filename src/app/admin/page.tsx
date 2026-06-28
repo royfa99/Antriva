@@ -39,6 +39,7 @@ export default function AdminDashboard() {
   const [tickerSpeed, setTickerSpeed] = useState("20");
   const [logoUrl, setLogoUrl] = useState("");
   const [monitorSchedules, setMonitorSchedules] = useState<string[]>([]);
+  const [voiceTemplate, setVoiceTemplate] = useState("Nomor antrian, A, {{queueNumber}}. Atas nama pasien, {{patientName}}. Silakan menuju ruangan, {{doctorName}}.");
   
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -95,6 +96,7 @@ export default function AdminDashboard() {
           setMonitorSchedules([]);
         }
       }
+      if (data.voice_template) setVoiceTemplate(data.voice_template);
     });
     
     const interval = setInterval(() => {
@@ -140,9 +142,17 @@ export default function AdminDashboard() {
     prevDataRef.current = dashboardData;
   }, [dashboardData, isAudioEnabled]);
 
+  const voiceTemplateRef = useRef(voiceTemplate);
+  useEffect(() => {
+    voiceTemplateRef.current = voiceTemplate;
+  }, [voiceTemplate]);
+
   const playVoice = (queueNumber: number, doctorName: string, patientName: string) => {
-    const text = `Nomor antrian, A, ${queueNumber}. Atas nama pasien, ${patientName}. Silakan menuju ruangan, ${doctorName}.`;
-    
+    const text = voiceTemplateRef.current
+      .replace(/{{queueNumber}}/g, queueNumber.toString())
+      .replace(/{{patientName}}/g, patientName)
+      .replace(/{{doctorName}}/g, doctorName);
+      
     try {
       const bell = new Audio('/bell.mp3');
       bell.onended = () => speakText(text);
@@ -232,6 +242,7 @@ export default function AdminDashboard() {
       await updateSetting("ticker_speed", tickerSpeed.toString());
       await updateSetting("logo_url", logoUrl);
       await updateSetting("monitor_schedules", JSON.stringify(monitorSchedules));
+      await updateSetting("voice_template", voiceTemplate);
       alert("Pengaturan berhasil disimpan.");
     } catch (e: any) {
       alert(e.message || "Gagal menyimpan pengaturan");
@@ -671,6 +682,18 @@ export default function AdminDashboard() {
                     />
                     <p className="text-sm text-muted-foreground">
                       Masukkan ID Video YouTube atau URL. Untuk playlist otomatis, masukkan beberapa ID video dipisahkan dengan koma.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="voiceTemplate">Kalimat Panggilan Suara</Label>
+                    <textarea 
+                      id="voiceTemplate" 
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={voiceTemplate} 
+                      onChange={(e) => setVoiceTemplate(e.target.value)} 
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Variabel yang tersedia: <b>{`{{queueNumber}}`}</b> (nomor antrian), <b>{`{{patientName}}`}</b> (nama pasien), <b>{`{{doctorName}}`}</b> (nama dokter).
                     </p>
                   </div>
                   <Button onClick={handleSaveSettings} disabled={isSavingSettings} className="w-full">
