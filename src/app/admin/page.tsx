@@ -718,6 +718,9 @@ export default function AdminDashboard() {
                     >
                       <option value="/bell.mp3">Bell Standar</option>
                       <option value="/airport.wav">Bell Stasiun / Bandara (3 Nada)</option>
+                      <option value="/hospital.wav">Bell Klinik / Rumah Sakit (2 Nada Lembut)</option>
+                      <option value="/modern.wav">Bell Modern (Notifikasi Cepat)</option>
+                      <option value="/xylophone.wav">Bell Xylophone (Hangat & Menenangkan)</option>
                       <option value="none">Tanpa Nada (Langsung Suara)</option>
                     </select>
                     {bellSound !== "none" && (
