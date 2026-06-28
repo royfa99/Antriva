@@ -40,6 +40,7 @@ export default function AdminDashboard() {
   const [logoUrl, setLogoUrl] = useState("");
   const [monitorSchedules, setMonitorSchedules] = useState<string[]>([]);
   const [voiceTemplate, setVoiceTemplate] = useState("Nomor antrian, A, {{queueNumber}}. Atas nama pasien, {{patientName}}. Silakan menuju ruangan, {{doctorName}}.");
+  const [bellSound, setBellSound] = useState("/bell.mp3");
   
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -97,6 +98,7 @@ export default function AdminDashboard() {
         }
       }
       if (data.voice_template) setVoiceTemplate(data.voice_template);
+      if (data.bell_sound) setBellSound(data.bell_sound);
     });
     
     const interval = setInterval(() => {
@@ -143,9 +145,11 @@ export default function AdminDashboard() {
   }, [dashboardData, isAudioEnabled]);
 
   const voiceTemplateRef = useRef(voiceTemplate);
+  const bellSoundRef = useRef(bellSound);
   useEffect(() => {
     voiceTemplateRef.current = voiceTemplate;
-  }, [voiceTemplate]);
+    bellSoundRef.current = bellSound;
+  }, [voiceTemplate, bellSound]);
 
   const playVoice = (queueNumber: number, doctorName: string, patientName: string) => {
     const text = voiceTemplateRef.current
@@ -153,8 +157,15 @@ export default function AdminDashboard() {
       .replace(/{{patientName}}/g, patientName)
       .replace(/{{doctorName}}/g, doctorName);
       
+    const sound = bellSoundRef.current;
+    
+    if (sound === "none" || !sound) {
+      speakText(text);
+      return;
+    }
+
     try {
-      const bell = new Audio('/bell.mp3');
+      const bell = new Audio(sound);
       bell.onended = () => speakText(text);
       bell.onerror = () => speakText(text);
       bell.play().catch(() => speakText(text));
@@ -243,6 +254,7 @@ export default function AdminDashboard() {
       await updateSetting("logo_url", logoUrl);
       await updateSetting("monitor_schedules", JSON.stringify(monitorSchedules));
       await updateSetting("voice_template", voiceTemplate);
+      await updateSetting("bell_sound", bellSound);
       alert("Pengaturan berhasil disimpan.");
     } catch (e: any) {
       alert(e.message || "Gagal menyimpan pengaturan");
@@ -695,6 +707,33 @@ export default function AdminDashboard() {
                     <p className="text-xs text-muted-foreground">
                       Variabel yang tersedia: <b>{`{{queueNumber}}`}</b> (nomor antrian), <b>{`{{patientName}}`}</b> (nama pasien), <b>{`{{doctorName}}`}</b> (nama dokter).
                     </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bellSound">Pilihan Nada (Sebelum Panggilan Suara)</Label>
+                    <select 
+                      id="bellSound" 
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={bellSound}
+                      onChange={(e) => setBellSound(e.target.value)}
+                    >
+                      <option value="/bell.mp3">Bell Standar</option>
+                      <option value="none">Tanpa Nada (Langsung Suara)</option>
+                    </select>
+                    {bellSound !== "none" && (
+                       <Button 
+                         type="button" 
+                         variant="outline" 
+                         size="sm" 
+                         className="mt-2"
+                         onClick={() => {
+                           try {
+                             new Audio(bellSound).play();
+                           } catch (e) {}
+                         }}
+                       >
+                         🎵 Tes Nada
+                       </Button>
+                    )}
                   </div>
                   <Button onClick={handleSaveSettings} disabled={isSavingSettings} className="w-full">
                     {isSavingSettings ? "Menyimpan..." : "Simpan Pengaturan"}
