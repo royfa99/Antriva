@@ -717,6 +717,7 @@ export default function AdminDashboard() {
                       onChange={(e) => setBellSound(e.target.value)}
                     >
                       <option value="/bell.mp3">Bell Standar</option>
+                      <option value="/airport.wav">Bell Stasiun / Bandara (3 Nada)</option>
                       <option value="none">Tanpa Nada (Langsung Suara)</option>
                     </select>
                     {bellSound !== "none" && (
