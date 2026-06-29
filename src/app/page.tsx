@@ -16,6 +16,8 @@ export default async function Home() {
   
   const clinicName = clinicSettings.clinic_name || "Klinik Antriva";
   const logoUrl = clinicSettings.logo_url || "";
+  const heroTitle = clinicSettings.hero_title || "Selamat Datang di";
+  const heroSubtitle = clinicSettings.hero_subtitle || "Gunakan layanan antrean online kami untuk kenyamanan Anda. Ambil nomor antrean dari rumah dan pantau panggilan secara real-time agar Anda tidak perlu menunggu lama di klinik.";
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50/50">
@@ -38,12 +40,12 @@ export default async function Home() {
         </div>
         
         <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight mb-6 max-w-4xl text-slate-900 leading-tight">
-          Selamat Datang di <br className="hidden lg:block" />
+          {heroTitle} <br className="hidden lg:block" />
           <span className="text-primary">{clinicName}</span>
         </h1>
         
         <p className="text-lg text-slate-600 max-w-2xl mb-12">
-          Gunakan layanan antrean online kami untuk kenyamanan Anda. Ambil nomor antrean dari rumah dan pantau panggilan secara real-time agar Anda tidak perlu menunggu lama di klinik.
+          {heroSubtitle}
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto max-w-md mx-auto sm:max-w-none">

@@ -35,6 +35,8 @@ export default function AdminDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [clinicName, setClinicName] = useState("Antriva");
+  const [heroTitle, setHeroTitle] = useState("Selamat Datang di");
+  const [heroSubtitle, setHeroSubtitle] = useState("Gunakan layanan antrean online kami untuk kenyamanan Anda. Ambil nomor antrean dari rumah dan pantau panggilan secara real-time agar Anda tidak perlu menunggu lama di klinik.");
   const [tickerText, setTickerText] = useState("Selamat datang di Antriva. Silakan mengambil nomor antrian melalui aplikasi web di HP Anda. Harap menunggu giliran Anda dipanggil. Selalu patuhi protokol kesehatan di area klinik.");
   const [tickerSpeed, setTickerSpeed] = useState("20");
   const [logoUrl, setLogoUrl] = useState("");
@@ -87,6 +89,8 @@ export default function AdminDashboard() {
     fetch("/api/settings").then(r => r.json()).then(data => {
       if (data.monitor_video) setVideoUrl(data.monitor_video);
       if (data.clinic_name) setClinicName(data.clinic_name);
+      if (data.hero_title) setHeroTitle(data.hero_title);
+      if (data.hero_subtitle) setHeroSubtitle(data.hero_subtitle);
       if (data.ticker_text) setTickerText(data.ticker_text);
       if (data.ticker_speed) setTickerSpeed(data.ticker_speed);
       if (data.logo_url) setLogoUrl(data.logo_url);
@@ -258,6 +262,8 @@ export default function AdminDashboard() {
     try {
       await updateSetting("monitor_video", videoUrl);
       await updateSetting("clinic_name", clinicName);
+      await updateSetting("hero_title", heroTitle);
+      await updateSetting("hero_subtitle", heroSubtitle);
       await updateSetting("ticker_text", tickerText);
       await updateSetting("ticker_speed", tickerSpeed.toString());
       await updateSetting("logo_url", logoUrl);
@@ -687,7 +693,25 @@ export default function AdminDashboard() {
                       placeholder="https://example.com/logo.png" 
                     />
                   </div>
+                  <div className="space-y-2 pt-4 border-t">
+                    <Label htmlFor="heroTitle">Judul Halaman Depan</Label>
+                    <Input 
+                      id="heroTitle" 
+                      value={heroTitle} 
+                      onChange={(e) => setHeroTitle(e.target.value)} 
+                    />
+                    <p className="text-xs text-muted-foreground">Teks yang muncul sebelum nama klinik (contoh: "Selamat Datang di")</p>
+                  </div>
                   <div className="space-y-2">
+                    <Label htmlFor="heroSubtitle">Deskripsi Halaman Depan</Label>
+                    <textarea 
+                      id="heroSubtitle" 
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={heroSubtitle} 
+                      onChange={(e) => setHeroSubtitle(e.target.value)} 
+                    />
+                  </div>
+                  <div className="space-y-2 pt-4 border-t">
                     <Label htmlFor="tickerText">Teks Berjalan (Ticker)</Label>
                     <Input 
                       id="tickerText" 
