@@ -7,7 +7,6 @@ import { headers } from "next/headers";
 import { and, eq, sql, inArray } from "drizzle-orm";
 import { getWIBDateString } from "./utils";
 import { eventEmitter } from "@/lib/eventEmitter";
-import { sendWhatsApp } from "@/lib/fonnte";
 import { user } from "@/db/schema";
 
 export async function takeQueue(scheduleId: string, date: string, patientId: string) {
