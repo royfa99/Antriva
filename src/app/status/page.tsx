@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 export default function MobileStatusPage() {
   const [dashboardData, setDashboardData] = useState<any[]>([]);
   const [clinicName, setClinicName] = useState("Klinik Antriva");
+  const [logoUrl, setLogoUrl] = useState("");
   const [monitorSchedules, setMonitorSchedules] = useState<string[]>([]);
   
   const fetchData = async () => {
@@ -27,6 +28,7 @@ export default function MobileStatusPage() {
 
     fetch("/api/settings").then(r => r.json()).then(data => {
       if (data.clinic_name) setClinicName(data.clinic_name);
+      if (data.logo_url) setLogoUrl(data.logo_url);
       if (data.monitor_schedules) {
         try {
           setMonitorSchedules(JSON.parse(data.monitor_schedules));
@@ -43,7 +45,11 @@ export default function MobileStatusPage() {
     <div className="min-h-screen bg-slate-50/50 pb-20">
       <header className="bg-white px-4 py-4 flex items-center justify-between border-b sticky top-0 z-50">
         <div className="flex items-center gap-3 text-primary font-bold text-lg">
-          <Stethoscope className="w-6 h-6" />
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo Klinik" className="h-8 w-auto object-contain" />
+          ) : (
+            <Stethoscope className="w-6 h-6" />
+          )}
           <span className="tracking-tight">{clinicName}</span>
         </div>
         <Link href="/">
