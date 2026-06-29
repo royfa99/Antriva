@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Stethoscope, Clock, Users, ArrowLeft } from "lucide-react";
+import { getWIBDay, getWIBHour } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 export default function MobileStatusPage() {
   const [dashboardData, setDashboardData] = useState<any[]>([]);
   const [clinicName, setClinicName] = useState("Klinik Antriva");
+  const [monitorSchedules, setMonitorSchedules] = useState<string[]>([]);
   
   const fetchData = async () => {
     try {
@@ -25,6 +27,13 @@ export default function MobileStatusPage() {
 
     fetch("/api/settings").then(r => r.json()).then(data => {
       if (data.clinic_name) setClinicName(data.clinic_name);
+      if (data.monitor_schedules) {
+        try {
+          setMonitorSchedules(JSON.parse(data.monitor_schedules));
+        } catch (e) {
+          setMonitorSchedules([]);
+        }
+      }
     }).catch(() => {});
 
     return () => clearInterval(interval);
@@ -56,7 +65,20 @@ export default function MobileStatusPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {dashboardData.map((schedule) => {
+            {(monitorSchedules.length > 0 
+              ? dashboardData.filter(item => monitorSchedules.includes(item.schedule.id))
+              : dashboardData.filter(item => {
+                  if (item.schedule.dayInt !== getWIBDay()) return false;
+                  // Automatic filtering based on time of day if no manual selection
+                  const startHour = parseInt(item.schedule.startTime.split(':')[0]);
+                  const currentHour = getWIBHour();
+                  if (currentHour < 12) {
+                    return startHour < 12; // Morning schedules
+                  } else {
+                    return startHour >= 12; // Afternoon/Evening schedules
+                  }
+                })
+            ).map((schedule) => {
               const currentCalled = schedule.currentCalled;
               return (
                 <Card key={schedule.schedule.id} className="overflow-hidden border-2 border-slate-100 shadow-sm">
