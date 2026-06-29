@@ -96,7 +96,7 @@ export async function toggleAttendance(queueId: string, isPresent: boolean) {
     headers: await headers(),
   });
 
-  if (!session?.user || (session.user as any).role !== 'admin') {
+  if (!session?.user) {
     throw new Error("Unauthorized");
   }
 
