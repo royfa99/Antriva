@@ -166,6 +166,24 @@ export async function callNextQueue(scheduleId: string) {
   await db.update(queues).set({ status: 'dipanggil', updatedAt: new Date() })
     .where(eq(queues.id, nextQueue.id));
       
+    // Fonnte: Send notification to the newly called patient
+    const calledQueueInfo = await db.select({
+        queueNumber: queues.queueNumber,
+        userWhatsapp: user.whatsapp,
+        userName: user.name,
+        patientName: patients.name
+      })
+      .from(queues)
+      .innerJoin(user, eq(queues.userId, user.id))
+      .leftJoin(patients, eq(queues.patientId, patients.id))
+      .where(eq(queues.id, nextQueue.id));
+
+    const calledQueue = calledQueueInfo[0];
+    if (calledQueue && calledQueue.userWhatsapp) {
+       const displayName = calledQueue.patientName || calledQueue.userName;
+       const msg = `Halo ${calledQueue.userName},\nSekarang giliran ${displayName} (A-${calledQueue.queueNumber}) untuk diperiksa. Silakan masuk ke ruangan dokter.`;
+       await sendWhatsApp(calledQueue.userWhatsapp, msg);
+    }
     // Fonnte: Send notification to the next-in-line (sisa 1)
     const upcomingQueueResult = await db.select({
         queueNumber: queues.queueNumber,
@@ -233,8 +251,24 @@ export async function callSpecificQueue(scheduleId: string, queueId: string) {
   await db.update(queues).set({ status: 'dipanggil', updatedAt: new Date() })
     .where(eq(queues.id, queueId));
 
-  // Note: We skip WhatsApp notifications for manual specific calls to avoid confusion
-  // with the automatic "1 left" tracking system.
+  // Fonnte: Send notification to the newly called patient
+  const calledQueueInfo = await db.select({
+      queueNumber: queues.queueNumber,
+      userWhatsapp: user.whatsapp,
+      userName: user.name,
+      patientName: patients.name
+    })
+    .from(queues)
+    .innerJoin(user, eq(queues.userId, user.id))
+    .leftJoin(patients, eq(queues.patientId, patients.id))
+    .where(eq(queues.id, queueId));
+
+  const calledQueue = calledQueueInfo[0];
+  if (calledQueue && calledQueue.userWhatsapp) {
+     const displayName = calledQueue.patientName || calledQueue.userName;
+     const msg = `Halo ${calledQueue.userName},\nSekarang giliran ${displayName} (A-${calledQueue.queueNumber}) untuk diperiksa. Silakan masuk ke ruangan dokter.`;
+     await sendWhatsApp(calledQueue.userWhatsapp, msg);
+  }
 
   eventEmitter.emit("queue_updated");
   eventEmitter.emit("queue_called");
