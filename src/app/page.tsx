@@ -17,6 +17,7 @@ export default async function Home() {
   const clinicName = clinicSettings.clinic_name || "Klinik Antriva";
   const logoUrl = clinicSettings.logo_url || "";
   const heroTitle = clinicSettings.hero_title || "Selamat Datang di";
+  const heroHighlight = clinicSettings.hero_highlight || clinicName;
   const heroSubtitle = clinicSettings.hero_subtitle || "Gunakan layanan antrean online kami untuk kenyamanan Anda. Ambil nomor antrean dari rumah dan pantau panggilan secara real-time agar Anda tidak perlu menunggu lama di klinik.";
 
   return (
@@ -40,8 +41,8 @@ export default async function Home() {
         </div>
         
         <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight mb-6 max-w-4xl text-slate-900 leading-tight">
-          {heroTitle} <br className="hidden lg:block" />
-          <span className="text-primary">{clinicName}</span>
+          {heroTitle} <br />
+          <span className="text-primary">{heroHighlight}</span>
         </h1>
         
         <p className="text-lg text-slate-600 max-w-2xl mb-12">

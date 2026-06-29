@@ -36,6 +36,7 @@ export default function AdminDashboard() {
   const [videoUrl, setVideoUrl] = useState("");
   const [clinicName, setClinicName] = useState("Antriva");
   const [heroTitle, setHeroTitle] = useState("Selamat Datang di");
+  const [heroHighlight, setHeroHighlight] = useState("");
   const [heroSubtitle, setHeroSubtitle] = useState("Gunakan layanan antrean online kami untuk kenyamanan Anda. Ambil nomor antrean dari rumah dan pantau panggilan secara real-time agar Anda tidak perlu menunggu lama di klinik.");
   const [tickerText, setTickerText] = useState("Selamat datang di Antriva. Silakan mengambil nomor antrian melalui aplikasi web di HP Anda. Harap menunggu giliran Anda dipanggil. Selalu patuhi protokol kesehatan di area klinik.");
   const [tickerSpeed, setTickerSpeed] = useState("20");
@@ -90,6 +91,7 @@ export default function AdminDashboard() {
       if (data.monitor_video) setVideoUrl(data.monitor_video);
       if (data.clinic_name) setClinicName(data.clinic_name);
       if (data.hero_title) setHeroTitle(data.hero_title);
+      if (data.hero_highlight !== undefined) setHeroHighlight(data.hero_highlight);
       if (data.hero_subtitle) setHeroSubtitle(data.hero_subtitle);
       if (data.ticker_text) setTickerText(data.ticker_text);
       if (data.ticker_speed) setTickerSpeed(data.ticker_speed);
@@ -263,6 +265,7 @@ export default function AdminDashboard() {
       await updateSetting("monitor_video", videoUrl);
       await updateSetting("clinic_name", clinicName);
       await updateSetting("hero_title", heroTitle);
+      await updateSetting("hero_highlight", heroHighlight);
       await updateSetting("hero_subtitle", heroSubtitle);
       await updateSetting("ticker_text", tickerText);
       await updateSetting("ticker_speed", tickerSpeed.toString());
@@ -694,13 +697,22 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div className="space-y-2 pt-4 border-t">
-                    <Label htmlFor="heroTitle">Judul Halaman Depan</Label>
+                    <Label htmlFor="heroTitle">Judul Halaman Depan (Baris 1)</Label>
                     <Input 
                       id="heroTitle" 
                       value={heroTitle} 
                       onChange={(e) => setHeroTitle(e.target.value)} 
                     />
-                    <p className="text-xs text-muted-foreground">Teks yang muncul sebelum nama klinik (contoh: "Selamat Datang di")</p>
+                    <p className="text-xs text-muted-foreground">Contoh: "Selamat Datang"</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="heroHighlight">Teks Sorotan Halaman Depan (Baris 2)</Label>
+                    <Input 
+                      id="heroHighlight" 
+                      value={heroHighlight} 
+                      onChange={(e) => setHeroHighlight(e.target.value)} 
+                    />
+                    <p className="text-xs text-muted-foreground">Contoh: "Ayah Bunda". Jika dikosongkan, akan otomatis menggunakan Nama Klinik.</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="heroSubtitle">Deskripsi Halaman Depan</Label>
