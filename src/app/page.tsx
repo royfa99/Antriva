@@ -1,72 +1,103 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Stethoscope, Clock, ShieldCheck } from "lucide-react";
+import { ArrowRight, Stethoscope, Clock, MonitorPlay, UserCircle } from "lucide-react";
+import { db } from "@/db";
+import { settings } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const settingRows = await db.select().from(settings);
+  const clinicSettings: Record<string, string> = {};
+  settingRows.forEach(row => {
+    clinicSettings[row.key] = row.value;
+  });
+  
+  const clinicName = clinicSettings.clinic_name || "Klinik Antriva";
+  const logoUrl = clinicSettings.logo_url || "";
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-slate-50/50">
       {/* Header */}
-      <header className="px-6 lg:px-14 py-6 flex items-center justify-between border-b bg-white/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-2 text-primary">
-          <Stethoscope className="w-8 h-8" />
-          <span className="font-bold text-xl tracking-tight">Antriva</span>
+      <header className="px-6 lg:px-14 py-4 flex items-center justify-between border-b bg-white sticky top-0 z-50 shadow-sm">
+        <div className="flex items-center gap-3 text-primary font-bold text-xl">
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo Klinik" className="h-10 w-auto object-contain" />
+          ) : (
+            <Stethoscope className="w-8 h-8" />
+          )}
+          <span className="tracking-tight text-slate-800">{clinicName}</span>
         </div>
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 text-center py-20 lg:py-32">
-        <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/10 text-primary mb-8 hover:bg-primary/20">
-          Digitalisasi Antrian Medis
+      <main className="flex-1 flex flex-col items-center justify-center px-4 text-center py-16 lg:py-24">
+        <div className="inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-medium transition-colors border-blue-200 bg-blue-50 text-blue-600 mb-8">
+          Portal Antrean Pasien
         </div>
-        <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight mb-6 max-w-4xl bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-          Daftar Antrian Klinik <br className="hidden lg:block" />
-          <span className="text-primary">Dari Mana Saja</span>
+        
+        <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight mb-6 max-w-4xl text-slate-900 leading-tight">
+          Selamat Datang di <br className="hidden lg:block" />
+          <span className="text-primary">{clinicName}</span>
         </h1>
-        <p className="text-lg lg:text-xl text-muted-foreground max-w-2xl mb-10">
-          Hemat waktu Anda. Ambil nomor antrian secara online, pantau status panggilan secara real-time, dan datang tepat waktu saat giliran Anda tiba.
+        
+        <p className="text-lg text-slate-600 max-w-2xl mb-12">
+          Gunakan layanan antrean online kami untuk kenyamanan Anda. Ambil nomor antrean dari rumah dan pantau panggilan secara real-time agar Anda tidak perlu menunggu lama di klinik.
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto max-w-md mx-auto sm:max-w-none">
           <Link href="/patient" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full text-lg rounded-full px-8 shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all">
-              Ambil Antrian Sekarang <ArrowRight className="ml-2 w-5 h-5" />
+            <Button size="lg" className="w-full text-lg rounded-full px-8 shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all py-6 h-auto border-2 border-primary">
+              <UserCircle className="mr-2 w-6 h-6" /> Ambil Antrean Online
             </Button>
           </Link>
           <Link href="/monitor" className="w-full sm:w-auto">
-            <Button size="lg" variant="outline" className="w-full text-lg rounded-full px-8">
-              Lihat Layar Monitor
+            <Button size="lg" variant="outline" className="w-full text-lg rounded-full px-8 bg-white hover:bg-slate-50 py-6 h-auto border-2 text-slate-700">
+              <MonitorPlay className="mr-2 w-6 h-6 text-slate-500" /> Layar Monitor
             </Button>
           </Link>
         </div>
 
-        {/* Features */}
+        {/* Instructions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mt-24 text-left">
-          <div className="bg-white/60 backdrop-blur-sm p-6 rounded-3xl border shadow-sm hover:shadow-md transition-shadow">
-            <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center text-primary mb-4">
-              <Clock className="w-6 h-6" />
+          <div className="bg-white p-6 rounded-3xl border shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+              <span className="text-8xl font-black">1</span>
             </div>
-            <h3 className="font-bold text-xl mb-2">Hemat Waktu Tunggu</h3>
-            <p className="text-muted-foreground">Tidak perlu lagi menunggu berjam-jam di klinik. Pantau sisa antrian langsung dari HP Anda.</p>
+            <div className="bg-blue-100 w-12 h-12 rounded-2xl flex items-center justify-center text-blue-600 mb-4 relative z-10">
+              <UserCircle className="w-6 h-6" />
+            </div>
+            <h3 className="font-bold text-xl mb-2 relative z-10 text-slate-800">Daftar Akun</h3>
+            <p className="text-slate-600 relative z-10 leading-relaxed">Masuk atau daftar dengan aman, lalu tambahkan profil nama pasien (diri sendiri atau keluarga) yang akan diperiksa.</p>
           </div>
-          <div className="bg-white/60 backdrop-blur-sm p-6 rounded-3xl border shadow-sm hover:shadow-md transition-shadow">
-            <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center text-primary mb-4">
+          
+          <div className="bg-white p-6 rounded-3xl border shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+              <span className="text-8xl font-black">2</span>
+            </div>
+            <div className="bg-amber-100 w-12 h-12 rounded-2xl flex items-center justify-center text-amber-600 mb-4 relative z-10">
               <Stethoscope className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-xl mb-2">Pilih Dokter Bebas</h3>
-            <p className="text-muted-foreground">Lihat jadwal dokter yang tersedia hari ini dan pilih yang paling sesuai dengan kebutuhan medis Anda.</p>
+            <h3 className="font-bold text-xl mb-2 relative z-10 text-slate-800">Pilih Dokter</h3>
+            <p className="text-slate-600 relative z-10 leading-relaxed">Lihat jadwal praktek dokter yang tersedia hari ini dan konfirmasi pengambilan nomor antrean dengan mudah.</p>
           </div>
-          <div className="bg-white/60 backdrop-blur-sm p-6 rounded-3xl border shadow-sm hover:shadow-md transition-shadow">
-            <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center text-primary mb-4">
-              <ShieldCheck className="w-6 h-6" />
+          
+          <div className="bg-white p-6 rounded-3xl border shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+              <span className="text-8xl font-black">3</span>
             </div>
-            <h3 className="font-bold text-xl mb-2">Aman & Terpercaya</h3>
-            <p className="text-muted-foreground">Sistem terintegrasi langsung dengan dasbor admin klinik memastikan giliran Anda dijamin.</p>
+            <div className="bg-green-100 w-12 h-12 rounded-2xl flex items-center justify-center text-green-600 mb-4 relative z-10">
+              <Clock className="w-6 h-6" />
+            </div>
+            <h3 className="font-bold text-xl mb-2 relative z-10 text-slate-800">Datang Tepat Waktu</h3>
+            <p className="text-slate-600 relative z-10 leading-relaxed">Pantau sisa antrean dari HP Anda. Berangkatlah ke klinik saat nomor antrean Anda sudah dekat untuk menghemat waktu.</p>
           </div>
         </div>
       </main>
 
-      <footer className="border-t py-8 text-center text-muted-foreground">
-        <p>&copy; 2026 Antriva. All rights reserved.</p>
+      <footer className="border-t bg-white py-8 text-center text-slate-500 text-sm">
+        <p>&copy; {new Date().getFullYear()} {clinicName}. All rights reserved.</p>
       </footer>
     </div>
   );
