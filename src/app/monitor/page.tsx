@@ -113,6 +113,8 @@ export default function MonitorDisplay() {
     }
   };
 
+  const isInitialLoadRef = useRef(true);
+
   useEffect(() => {
     let triggered = false;
     const newCalled: Record<string, string> = {};
@@ -124,21 +126,22 @@ export default function MonitorDisplay() {
         const currentString = `${q.id}-${q.updatedAt}`;
         newCalled[id] = currentString;
         
-        // Check if there was a previous state for this schedule and it changed
-        if (currentCalledRef.current[id] && currentCalledRef.current[id] !== currentString) {
+        // Trigger if there's a new currentCalled or if it changed
+        if (currentCalledRef.current[id] !== currentString) {
           triggered = true;
         }
       }
     });
 
-    // Only trigger if this is not the initial load (ref has keys) and a change was detected
-    if (Object.keys(currentCalledRef.current).length > 0 && triggered) {
+    // Trigger if this is not the initial load and a change was detected
+    if (!isInitialLoadRef.current && triggered) {
       lowerVolume();
     }
 
     // Always keep ref updated to the latest state
     if (dashboardData.length > 0) {
       currentCalledRef.current = newCalled;
+      isInitialLoadRef.current = false;
     }
   }, [dashboardData]);
 
