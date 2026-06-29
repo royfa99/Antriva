@@ -133,12 +133,18 @@ export default function PatientDashboard() {
     const eventSource = new EventSource("/api/sse");
     
     eventSource.onmessage = (event) => {
-      if (event.data === "update") {
+      if (event.data === "update" || event.data === "called") {
         fetchData();
       }
     };
 
-    return () => eventSource.close();
+    // Fallback polling every 5 seconds for mobile browsers where SSE drops frequently
+    const interval = setInterval(fetchData, 5000);
+
+    return () => {
+      eventSource.close();
+      clearInterval(interval);
+    };
   }, [session, loadingSession, selectedDate]);
 
   const handleAddPatient = async (e: React.FormEvent) => {
