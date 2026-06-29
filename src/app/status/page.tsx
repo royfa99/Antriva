@@ -18,8 +18,14 @@ export default function MobileStatusPage() {
     try {
       const res = await fetch("/api/admin/dashboard");
       const data = await res.json();
-      setDashboardData(data);
-    } catch (e) {}
+      if (Array.isArray(data)) {
+        setDashboardData(data);
+      } else {
+        setDashboardData([]);
+      }
+    } catch (e) {
+      setDashboardData([]);
+    }
   };
 
   useEffect(() => {

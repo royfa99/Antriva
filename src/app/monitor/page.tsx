@@ -24,7 +24,11 @@ export default function MonitorDisplay() {
     try {
       const res = await fetch("/api/admin/dashboard", { cache: "no-store" });
       const data = await res.json();
-      setDashboardData(data);
+      if (Array.isArray(data)) {
+        setDashboardData(data);
+      } else {
+        setDashboardData([]);
+      }
       
       const vUrl = await getMonitorVideo();
       if (vUrl) {

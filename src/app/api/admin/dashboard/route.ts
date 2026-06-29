@@ -50,6 +50,7 @@ export async function GET() {
 
     return NextResponse.json(dashboardData);
   } catch (error: any) {
+    console.error("Dashboard API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
