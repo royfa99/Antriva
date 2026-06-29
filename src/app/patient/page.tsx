@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { takeQueue, cancelQueue, getPatients, addPatient, deletePatient } from "@/lib/actions";
-import { LogOut, Stethoscope, Clock, Users, UserPlus, Trash2 } from "lucide-react";
+import { LogOut, Stethoscope, Clock, Users, UserPlus, Trash2, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -30,6 +30,15 @@ export default function PatientDashboard() {
   const [selectedDate, setSelectedDate] = useState<string>(getWIBDateString());
   const [clinicName, setClinicName] = useState("Antriva");
   const [logoUrl, setLogoUrl] = useState("");
+  
+  const [notificationPermission, setNotificationPermission] = useState<string>("default");
+  const previousActiveQueuesRef = useRef<any[]>([]);
+
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
 
   const [loadingData, setLoadingData] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -74,6 +83,33 @@ export default function PatientDashboard() {
       setLoadingData(false);
     }
   };
+
+  useEffect(() => {
+    let played = false;
+    activeQueues.forEach(activeQueue => {
+      const q = activeQueue.queue;
+      const prevActiveQueue = previousActiveQueuesRef.current.find(pq => pq.queue.id === q.id);
+      
+      if (q.status === "dipanggil" && (!prevActiveQueue || prevActiveQueue.queue.status !== "dipanggil")) {
+        // Just called!
+        if (!played) {
+          try {
+            const audio = new Audio('/bell.mp3');
+            audio.play().catch(e => console.error("Audio play failed", e));
+            played = true;
+          } catch(e) {}
+        }
+
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("Giliran Anda!", {
+            body: `Antrean A-${q.queueNumber} menuju ruangan ${activeQueue.doctor.name}.`
+          });
+        }
+      }
+    });
+
+    previousActiveQueuesRef.current = activeQueues;
+  }, [activeQueues]);
 
   useEffect(() => {
     if (loadingSession || !session) return;
@@ -169,6 +205,14 @@ export default function PatientDashboard() {
     router.push("/");
   };
 
+  const requestNotificationPermission = () => {
+    if ("Notification" in window) {
+      Notification.requestPermission().then(permission => {
+        setNotificationPermission(permission);
+      });
+    }
+  };
+
   if (loadingSession || loadingData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -196,6 +240,18 @@ export default function PatientDashboard() {
       </header>
 
       <main className="max-w-3xl mx-auto mt-8 px-4 space-y-8">
+          {notificationPermission === "default" && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Bell className="w-5 h-5 text-blue-500" />
+                  <p className="text-sm text-blue-900">Aktifkan notifikasi browser agar Anda mendapat pemberitahuan saat antrean dipanggil.</p>
+                </div>
+                <Button size="sm" onClick={requestNotificationPermission} className="whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white">Aktifkan Notifikasi</Button>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="shadow-sm">
             <CardHeader className="pb-4 border-b bg-slate-50/50">
               <CardTitle className="text-lg flex items-center gap-2">
