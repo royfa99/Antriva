@@ -52,9 +52,9 @@ export default async function Home() {
               <UserCircle className="mr-2 w-6 h-6" /> Ambil Antrean Online
             </Button>
           </Link>
-          <Link href="/monitor" className="w-full sm:w-auto">
+          <Link href="/status" className="w-full sm:w-auto">
             <Button size="lg" variant="outline" className="w-full text-lg rounded-full px-8 bg-white hover:bg-slate-50 py-6 h-auto border-2 text-slate-700">
-              <MonitorPlay className="mr-2 w-6 h-6 text-slate-500" /> Layar Monitor
+              <MonitorPlay className="mr-2 w-6 h-6 text-slate-500" /> Cek Status Antrean
             </Button>
           </Link>
         </div>
@@ -98,6 +98,9 @@ export default async function Home() {
 
       <footer className="border-t bg-white py-8 text-center text-slate-500 text-sm">
         <p>&copy; {new Date().getFullYear()} {clinicName}. All rights reserved.</p>
+        <div className="mt-4">
+          <Link href="/monitor" className="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-4">Buka Monitor TV Klinik</Link>
+        </div>
       </footer>
     </div>
   );
