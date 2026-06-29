@@ -101,9 +101,17 @@ export default function PatientDashboard() {
         }
 
         if ("Notification" in window && Notification.permission === "granted") {
-          new Notification("Giliran Anda!", {
-            body: `Antrean A-${q.queueNumber} menuju ruangan ${activeQueue.doctor.name}.`
-          });
+          try {
+            new Notification("Giliran Anda!", {
+              body: `Antrean A-${q.queueNumber} menuju ruangan ${activeQueue.doctor.name}.`
+            });
+          } catch (error) {
+            // Android Chrome throws TypeError if not using ServiceWorker
+            alert(`Giliran Anda! Antrean A-${q.queueNumber} menuju ruangan ${activeQueue.doctor.name}.`);
+          }
+        } else {
+          // If no permission, at least show an alert
+          alert(`Giliran Anda! Antrean A-${q.queueNumber} menuju ruangan ${activeQueue.doctor.name}.`);
         }
       }
     });
