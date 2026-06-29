@@ -90,7 +90,7 @@ export default function PatientDashboard() {
       const q = activeQueue.queue;
       const prevActiveQueue = previousActiveQueuesRef.current.find(pq => pq.queue.id === q.id);
       
-      if (q.status === "dipanggil" && (!prevActiveQueue || prevActiveQueue.queue.status !== "dipanggil")) {
+      if (q.status === "dipanggil" && (!prevActiveQueue || prevActiveQueue.queue.status !== "dipanggil" || prevActiveQueue.queue.updatedAt !== q.updatedAt)) {
         // Just called!
         if (!played) {
           try {
