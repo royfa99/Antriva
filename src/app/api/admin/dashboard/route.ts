@@ -32,8 +32,8 @@ export async function GET() {
     const dashboardData = scheds.map(s => {
       const sQueues = allQueues.filter(q => q.queue.scheduleId === s.schedule.id);
       
-      // Sort queues by queueNumber
-      sQueues.sort((a, b) => a.queue.queueNumber - b.queue.queueNumber);
+      // Sort queues by sortOrder
+      sQueues.sort((a, b) => (a.queue.sortOrder || 0) - (b.queue.sortOrder || 0));
 
       const waiting = sQueues.filter(q => q.queue.status === 'menunggu').length;
       const current = sQueues.find(q => q.queue.status === 'dipanggil');

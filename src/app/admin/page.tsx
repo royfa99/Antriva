@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { callNextQueue, recallQueue, finishCurrentQueue, callSpecificQueue, addDoctor, updateDoctor, deleteSchedule, updateSetting } from "@/lib/actions";
+import { callNextQueue, recallQueue, finishCurrentQueue, callSpecificQueue, addDoctor, updateDoctor, deleteSchedule, updateSetting, toggleAttendance } from "@/lib/actions";
 import { LogOut, LayoutDashboard, Users, UserCheck, Stethoscope, Trash2, Edit, Volume2, VolumeX, Hand } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -241,6 +241,15 @@ export default function AdminDashboard() {
       await fetchData();
     } catch (e: any) {
       alert(e.message || "Gagal memanggil antrian spesifik");
+    }
+  };
+
+  const handleToggleAttendance = async (queueId: string, isPresent: boolean) => {
+    try {
+      await toggleAttendance(queueId, isPresent);
+      await fetchData();
+    } catch (e: any) {
+      alert(e.message || "Gagal mengubah status kehadiran");
     }
   };
 
@@ -497,7 +506,8 @@ export default function AdminDashboard() {
                           <TableRow>
                             <TableHead className="w-[100px] font-bold">No.</TableHead>
                             <TableHead className="font-bold">Nama Pasien</TableHead>
-                            <TableHead className="text-right font-bold">Status</TableHead>
+                            <TableHead className="text-center font-bold">Kehadiran</TableHead>
+                            <TableHead className="text-right font-bold">Aksi</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -506,6 +516,18 @@ export default function AdminDashboard() {
                               <TableRow key={q.queue.id} className={q.queue.status === 'dipanggil' ? 'bg-blue-50/50' : ''}>
                                 <TableCell className="font-bold text-slate-700">A-{q.queue.queueNumber}</TableCell>
                                 <TableCell className="font-medium text-slate-900">{q.patient?.name || q.user.name}</TableCell>
+                                <TableCell className="text-center">
+                                  {q.queue.status === 'menunggu' && (
+                                    <Button
+                                      variant={q.queue.isPresent ? "default" : "outline"}
+                                      size="sm"
+                                      className={`h-7 text-xs ${q.queue.isPresent ? 'bg-green-600 hover:bg-green-700' : 'text-slate-500'}`}
+                                      onClick={() => handleToggleAttendance(q.queue.id, !q.queue.isPresent)}
+                                    >
+                                      {q.queue.isPresent ? 'Sudah Hadir' : 'Belum Hadir'}
+                                    </Button>
+                                  )}
+                                </TableCell>
                                 <TableCell className="text-right">
                                   <div className="flex items-center justify-end gap-2">
                                     {q.queue.status === 'menunggu' && (

@@ -53,6 +53,8 @@ export async function takeQueue(scheduleId: string, date: string, patientId: str
     patientId,
     scheduleId,
     queueNumber: nextNumber,
+    sortOrder: nextNumber,
+    isPresent: false,
     date,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -89,6 +91,24 @@ export async function cancelQueue(queueId: string) {
   return true;
 }
 
+export async function toggleAttendance(queueId: string, isPresent: boolean) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user || (session.user as any).role !== 'admin') {
+    throw new Error("Unauthorized");
+  }
+
+  await db.update(queues).set({
+    isPresent,
+    updatedAt: new Date()
+  }).where(eq(queues.id, queueId));
+
+  eventEmitter.emit("queue_updated");
+  return true;
+}
+
 export async function callNextQueue(scheduleId: string) {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -102,6 +122,39 @@ export async function callNextQueue(scheduleId: string) {
 
   const today = getWIBDateString();
 
+  // Mark current 'dipanggil' as 'selesai' only if we successfully call someone next,
+  // or we can just fetch the waiting queues first.
+  const waitingQueues = await db.query.queues.findMany({
+    where: and(
+      eq(queues.scheduleId, scheduleId),
+      eq(queues.status, 'menunggu'),
+      eq(queues.date, today)
+    ),
+    orderBy: (queues, { asc }) => [asc(queues.sortOrder)]
+  });
+
+  if (waitingQueues.length === 0) {
+    throw new Error("Tidak ada antrian yang menunggu.");
+  }
+
+  let nextQueue = null;
+  let skippedCount = 0;
+
+  for (const q of waitingQueues) {
+    if (q.isPresent) {
+      nextQueue = q;
+      break;
+    } else {
+      await db.update(queues).set({ sortOrder: q.sortOrder! + 2.5 }).where(eq(queues.id, q.id));
+      skippedCount++;
+    }
+  }
+
+  if (!nextQueue) {
+    eventEmitter.emit("queue_updated");
+    throw new Error(`Semua antrean dilewati (${skippedCount} pasien) karena belum ada yang hadir.`);
+  }
+
   // Mark current 'dipanggil' as 'selesai'
   await db.update(queues).set({ status: 'selesai', updatedAt: new Date() })
     .where(and(
@@ -110,19 +163,8 @@ export async function callNextQueue(scheduleId: string) {
       eq(queues.date, today)
     ));
 
-  // Find next 'menunggu'
-  const nextQueue = await db.query.queues.findFirst({
-    where: and(
-      eq(queues.scheduleId, scheduleId),
-      eq(queues.status, 'menunggu'),
-      eq(queues.date, today)
-    ),
-    orderBy: (queues, { asc }) => [asc(queues.queueNumber)]
-  });
-
-  if (nextQueue) {
-    await db.update(queues).set({ status: 'dipanggil', updatedAt: new Date() })
-      .where(eq(queues.id, nextQueue.id));
+  await db.update(queues).set({ status: 'dipanggil', updatedAt: new Date() })
+    .where(eq(queues.id, nextQueue.id));
       
     // Fonnte: Send notification to the next-in-line (sisa 1)
     const upcomingQueueResult = await db.select({
@@ -139,7 +181,7 @@ export async function callNextQueue(scheduleId: string) {
         eq(queues.status, 'menunggu'),
         eq(queues.date, today)
       ))
-      .orderBy(queues.queueNumber)
+      .orderBy(queues.sortOrder)
       .limit(1);
 
     const upcomingQueue = upcomingQueueResult[0];
@@ -153,10 +195,6 @@ export async function callNextQueue(scheduleId: string) {
     eventEmitter.emit("queue_updated");
     eventEmitter.emit("queue_called");
     return nextQueue;
-  }
-
-  eventEmitter.emit("queue_updated");
-  return null;
 }
 
 export async function callSpecificQueue(scheduleId: string, queueId: string) {

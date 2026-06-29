@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, real } from "drizzle-orm/pg-core";
 
 // Better Auth Tables
 export const user = pgTable("user", {
@@ -79,6 +79,8 @@ export const queues = pgTable("queues", {
   patientId: text("patient_id").references(() => patients.id), // Nullable for backward compatibility with old data
   scheduleId: text("schedule_id").notNull().references(() => schedules.id),
   queueNumber: integer("queue_number").notNull(),
+  sortOrder: real("sort_order"), // For logic skipping
+  isPresent: boolean("is_present").notNull().default(false),
   status: text("status").notNull().default("menunggu"), // menunggu, dipanggil, selesai, batal
   date: text("date").notNull(), // ISO date string YYYY-MM-DD
   createdAt: timestamp("createdAt").notNull(),
