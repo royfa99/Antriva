@@ -94,8 +94,10 @@ export default function PatientDashboard() {
         // Just called!
         if (!played) {
           try {
-            const audio = new Audio('/bell.mp3');
-            audio.play().catch(e => console.error("Audio play failed", e));
+            const audio = document.getElementById("notification-bell") as HTMLAudioElement;
+            if (audio) {
+              audio.play().catch(e => console.error("Audio play failed", e));
+            }
             played = true;
           } catch(e) {}
         }
@@ -220,6 +222,15 @@ export default function PatientDashboard() {
   };
 
   const requestNotificationPermission = () => {
+    // Unlock audio element on user gesture
+    const audio = document.getElementById("notification-bell") as HTMLAudioElement;
+    if (audio) {
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch(() => {});
+    }
+
     if ("Notification" in window) {
       Notification.requestPermission().then(permission => {
         setNotificationPermission(permission);
@@ -497,6 +508,9 @@ export default function PatientDashboard() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Hidden audio element for notifications */}
+      <audio id="notification-bell" src="/bell.mp3" preload="auto"></audio>
     </div>
   );
 }
