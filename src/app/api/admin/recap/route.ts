@@ -50,6 +50,13 @@ export async function GET(req: Request) {
       }
     }
 
+    let targetDayInt = -1;
+    if (dateParam !== 'all' && dateParam !== 'range') {
+      const dateStr = dateParam || getWIBDateString();
+      // Ensure we parse it as local time to get the correct day
+      targetDayInt = new Date(dateStr + "T12:00:00").getDay();
+    }
+
     const chartData = scheds.map(s => {
       const sQueues = allQueues.filter(q => q.queue.scheduleId === s.schedule.id);
       
@@ -64,8 +71,12 @@ export async function GET(req: Request) {
         Daftar: total,
         Selesai: selesai,
         Batal: batal,
-        Menunggu: menunggu
+        Menunggu: menunggu,
+        dayInt: s.schedule.dayInt
       };
+    }).filter(d => {
+       if (dateParam === 'all' || dateParam === 'range') return d.Daftar > 0;
+       return d.Daftar > 0 || d.dayInt === targetDayInt;
     });
 
     return NextResponse.json({
