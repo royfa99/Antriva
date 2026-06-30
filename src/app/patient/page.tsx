@@ -490,7 +490,11 @@ export default function PatientDashboard() {
               <label className="text-sm font-medium leading-none">Pilih profil yang akan mengantri</label>
               <Select value={selectedPatientId} onValueChange={(v) => v && setSelectedPatientId(v)} required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih Profil Anak" />
+                  <SelectValue placeholder="Pilih Profil Anak">
+                    {selectedPatientId 
+                      ? (patientsList.find(p => p.id === selectedPatientId)?.name || "Pilih Profil Anak")
+                      : "Pilih Profil Anak"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {patientsList.map(p => (
