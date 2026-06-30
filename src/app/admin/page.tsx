@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<any[]>([]);
   const [recapData, setRecapData] = useState<any[]>([]);
+  const [patientsData, setPatientsData] = useState<any[]>([]);
   const [recapDate, setRecapDate] = useState<string>("today");
   const [recapStartDate, setRecapStartDate] = useState<string>(getWIBDateString());
   const [recapEndDate, setRecapEndDate] = useState<string>(getWIBDateString());
@@ -75,6 +76,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchPatients = async () => {
+    try {
+      const res = await fetch("/api/admin/patients", { cache: "no-store" });
+      const data = await res.json();
+      setPatientsData(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     fetchRecap(recapDate, recapStartDate, recapEndDate);
   }, [recapDate, recapStartDate, recapEndDate]);
@@ -87,6 +98,7 @@ export default function AdminDashboard() {
     }
     
     fetchData();
+    fetchPatients();
     fetch("/api/settings").then(r => r.json()).then(data => {
       if (data.monitor_video) setVideoUrl(data.monitor_video);
       if (data.clinic_name) setClinicName(data.clinic_name);
@@ -422,6 +434,7 @@ export default function AdminDashboard() {
         <Tabs defaultValue="antrian" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="antrian" className="text-lg px-6">Manajemen Antrian</TabsTrigger>
+            <TabsTrigger value="pasien" className="text-lg px-6">Database Pasien</TabsTrigger>
             <TabsTrigger value="dokter" className="text-lg px-6">Manajemen Dokter</TabsTrigger>
             <TabsTrigger value="pengaturan" className="text-lg px-6">Pengaturan</TabsTrigger>
             <TabsTrigger value="rekapitulasi" className="text-lg px-6">Rekapitulasi</TabsTrigger>
@@ -580,6 +593,60 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="pasien">
+            <div className="mb-8 flex justify-between items-end">
+              <div>
+                <h2 className="text-3xl font-bold text-slate-800">Database Pasien</h2>
+                <p className="text-muted-foreground mt-1">Daftar semua pengguna dan pasien yang terdaftar di sistem.</p>
+              </div>
+              <Button onClick={() => fetchPatients()} variant="outline" className="shadow-sm">
+                Refresh Data
+              </Button>
+            </div>
+
+            <Card className="shadow-lg overflow-hidden border-t-4 border-t-primary">
+              <Table>
+                <TableHeader className="bg-slate-50">
+                  <TableRow>
+                    <TableHead className="font-bold">Nama Akun (Utama)</TableHead>
+                    <TableHead className="font-bold">No WhatsApp</TableHead>
+                    <TableHead className="font-bold">Email</TableHead>
+                    <TableHead className="font-bold">Anggota Keluarga (Pasien Tambahan)</TableHead>
+                    <TableHead className="font-bold">Tgl Mendaftar</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {patientsData.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-bold text-slate-800">{user.name}</TableCell>
+                      <TableCell>{user.whatsapp || '-'}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        {user.family && user.family.length > 0 ? (
+                          <ul className="list-disc list-inside">
+                            {user.family.map((member: any) => (
+                              <li key={member.id} className="text-sm">{member.name}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <span className="text-muted-foreground text-sm italic">Tidak ada</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{new Date(user.createdAt).toLocaleDateString('id-ID')}</TableCell>
+                    </TableRow>
+                  ))}
+                  {patientsData.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                        Belum ada pasien yang mendaftar.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
           </TabsContent>
 
           <TabsContent value="dokter">
