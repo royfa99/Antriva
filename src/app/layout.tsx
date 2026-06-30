@@ -10,6 +10,15 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Antrian Pasien - Antriva",
   description: "Aplikasi Pendaftaran Antrian Pasien secara Real-time",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Antriva",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 import Script from "next/script";
@@ -24,7 +33,28 @@ export default function RootLayout({
       lang="id"
       className={`${outfit.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <meta name="theme-color" content="#2563eb" />
+      </head>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <Script id="register-sw" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(
+                  function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                  },
+                  function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                  }
+                );
+              });
+            }
+          `}
+        </Script>
+      </body>
     </html>
   );
 }
