@@ -34,6 +34,8 @@ export async function GET(req: Request) {
       .innerJoin(schedules, eq(queues.scheduleId, schedules.id))
       .innerJoin(doctors, eq(schedules.doctorId, doctors.id));
 
+    const actualDateParam = dateParam === 'today' ? getWIBDateString() : dateParam;
+
     if (dateParam === 'range' && startDateParam && endDateParam) {
       allQueues = await baseQuery.where(
         and(
@@ -42,7 +44,7 @@ export async function GET(req: Request) {
         )
       );
     } else {
-      const targetDate = dateParam === 'all' ? null : (dateParam || getWIBDateString());
+      const targetDate = actualDateParam === 'all' ? null : (actualDateParam || getWIBDateString());
       if (targetDate) {
         allQueues = await baseQuery.where(eq(queues.date, targetDate));
       } else {
@@ -51,8 +53,8 @@ export async function GET(req: Request) {
     }
 
     let targetDayInt = -1;
-    if (dateParam !== 'all' && dateParam !== 'range') {
-      const dateStr = dateParam || getWIBDateString();
+    if (actualDateParam !== 'all' && dateParam !== 'range') {
+      const dateStr = actualDateParam || getWIBDateString();
       // Ensure we parse it as local time to get the correct day
       targetDayInt = new Date(dateStr + "T12:00:00").getDay();
     }
