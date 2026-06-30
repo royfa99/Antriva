@@ -154,7 +154,7 @@ export default function PatientDashboard() {
     if (!newPatientName.trim()) return;
     setIsAddingPatient(true);
     try {
-      await addPatient(newPatientName);
+      await (async (...args) => { const r = await addPatient(...args); if (r?.error) throw new Error(r.error); return r; })(newPatientName);
       setNewPatientName("");
       await fetchPatientsList();
     } catch (e: any) {
@@ -167,7 +167,7 @@ export default function PatientDashboard() {
   const handleDeletePatient = async (id: string) => {
     if (!confirm("Yakin menghapus profil anak ini?")) return;
     try {
-      await deletePatient(id);
+      await (async (...args) => { const r = await deletePatient(...args); if (r?.error) throw new Error(r.error); return r; })(id);
       if (selectedPatientId === id) setSelectedPatientId("");
       await fetchPatientsList();
     } catch (e: any) {
@@ -192,7 +192,7 @@ export default function PatientDashboard() {
     }
     setActionLoading(true);
     try {
-      await takeQueue(selectedScheduleId, selectedDate, selectedPatientId);
+      await (async (...args) => { const r = await takeQueue(...args); if (r?.error) throw new Error(r.error); return r; })(selectedScheduleId, selectedDate, selectedPatientId);
       setIsDialogOpen(false);
       await fetchData(); // Refresh data immediately
     } catch (e: any) {
@@ -207,7 +207,7 @@ export default function PatientDashboard() {
     
     setActionLoading(true);
     try {
-      await cancelQueue(queueId);
+      await (async (...args) => { const r = await cancelQueue(...args); if (r?.error) throw new Error(r.error); return r; })(queueId);
       await fetchData();
     } catch (e: any) {
       alert(e.message || "Gagal membatalkan antrian");

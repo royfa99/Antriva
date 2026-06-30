@@ -15,7 +15,7 @@ export async function takeQueue(scheduleId: string, date: string, patientId: str
   });
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    return { error: "Unauthorized" };
   }
 
   const userId = session.user.id;
@@ -32,7 +32,7 @@ export async function takeQueue(scheduleId: string, date: string, patientId: str
   });
 
   if (existingQueue) {
-    throw new Error("Pasien ini sudah terdaftar pada jadwal dokter ini di tanggal tersebut.");
+    return { error: "Pasien ini sudah terdaftar pada jadwal dokter ini di tanggal tersebut." };
   }
 
   // Get the latest queue number for the schedule & date
@@ -69,7 +69,7 @@ export async function cancelQueue(queueId: string) {
   });
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    return { error: "Unauthorized" };
   }
 
   // verify ownership
@@ -78,7 +78,7 @@ export async function cancelQueue(queueId: string) {
   });
 
   if (!q || q.userId !== session.user.id) {
-    throw new Error("Antrian tidak ditemukan atau bukan milik Anda.");
+    return { error: "Antrian tidak ditemukan atau bukan milik Anda." };
   }
 
   await db.update(queues).set({
@@ -96,7 +96,7 @@ export async function toggleAttendance(queueId: string, isPresent: boolean) {
   });
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    return { error: "Unauthorized" };
   }
 
   await db.update(queues).set({
@@ -114,7 +114,7 @@ export async function callNextQueue(scheduleId: string) {
   });
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    return { error: "Unauthorized" };
   }
 
   // Admin check could be here (e.g. check user role)
@@ -133,7 +133,7 @@ export async function callNextQueue(scheduleId: string) {
   });
 
   if (waitingQueues.length === 0) {
-    throw new Error("Tidak ada antrian yang menunggu.");
+    return { error: "Tidak ada antrian yang menunggu." };
   }
 
   let nextQueue = null;
@@ -151,7 +151,7 @@ export async function callNextQueue(scheduleId: string) {
 
   if (!nextQueue) {
     eventEmitter.emit("queue_updated");
-    throw new Error(`Semua antrean dilewati (${skippedCount} pasien) karena belum ada yang hadir.`);
+    return { error: `Semua antrean dilewati (${skippedCount} pasien) karena belum ada yang hadir.` };
   }
 
   // Mark current 'dipanggil' as 'selesai'
@@ -176,7 +176,7 @@ export async function callSpecificQueue(scheduleId: string, queueId: string) {
   });
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    return { error: "Unauthorized" };
   }
 
   const today = getWIBDateString();
@@ -199,7 +199,7 @@ export async function callSpecificQueue(scheduleId: string, queueId: string) {
   });
 
   if (!specificQueue) {
-    throw new Error("Antrian tidak ditemukan atau tidak valid.");
+    return { error: "Antrian tidak ditemukan atau tidak valid." };
   }
 
   // Update status to dipanggil
@@ -217,7 +217,7 @@ export async function recallQueue(scheduleId: string) {
   });
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    return { error: "Unauthorized" };
   }
 
   const today = getWIBDateString();
@@ -242,7 +242,7 @@ export async function recallQueue(scheduleId: string) {
 
 export async function finishCurrentQueue(scheduleId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user) return { error: "Unauthorized" };
 
   const today = getWIBDateString();
 
@@ -259,7 +259,7 @@ export async function finishCurrentQueue(scheduleId: string) {
 
 export async function addDoctor(data: { name: string, specialization: string, dayInt: number, startTime: string, endTime: string }) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user) return { error: "Unauthorized" };
 
   const doctorId = crypto.randomUUID();
   await db.insert(doctors).values({
@@ -282,7 +282,7 @@ export async function addDoctor(data: { name: string, specialization: string, da
 
 export async function updateDoctor(doctorId: string, data: { name: string, specialization: string, scheduleId: string, dayInt: number, startTime: string, endTime: string }) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user) return { error: "Unauthorized" };
 
   await db.update(doctors).set({
     name: data.name,
@@ -311,7 +311,7 @@ export async function updateDoctor(doctorId: string, data: { name: string, speci
 
 export async function deleteSchedule(scheduleId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user) return { error: "Unauthorized" };
 
   const today = getWIBDateString();
   
@@ -324,7 +324,7 @@ export async function deleteSchedule(scheduleId: string) {
     ));
 
   if (activeQ.length > 0) {
-    throw new Error("Tidak dapat menghapus jadwal karena masih ada antrian aktif hari ini.");
+    return { error: "Tidak dapat menghapus jadwal karena masih ada antrian aktif hari ini." };
   }
 
   // Get doctorId before deleting schedule
@@ -347,7 +347,7 @@ export async function deleteSchedule(scheduleId: string) {
 
 export async function updateSetting(key: string, value: string) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user) return { error: "Unauthorized" };
 
   const existing = await db.query.settings.findFirst({
     where: eq(settings.key, key)
@@ -376,7 +376,7 @@ export async function getMonitorVideo() {
 
 export async function addPatient(name: string) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user) return { error: "Unauthorized" };
 
   const newPatient = await db.insert(patients).values({
     id: crypto.randomUUID(),
@@ -401,7 +401,7 @@ export async function getPatients() {
 
 export async function deletePatient(patientId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user) return { error: "Unauthorized" };
 
   // Check if patient is currently queued
   const activeQueues = await db.query.queues.findFirst({
@@ -412,7 +412,7 @@ export async function deletePatient(patientId: string) {
   });
 
   if (activeQueues) {
-    throw new Error("Tidak dapat menghapus profil anak karena sedang dalam antrian aktif.");
+    return { error: "Tidak dapat menghapus profil anak karena sedang dalam antrian aktif." };
   }
 
   await db.delete(patients).where(and(
