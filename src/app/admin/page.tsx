@@ -97,6 +97,13 @@ export default function AdminDashboard() {
       return;
     }
     
+    // Check role, prevent patients from accessing admin dashboard
+    const userRole = (session.user as any)?.role;
+    if (userRole === "patient") {
+      router.push("/");
+      return;
+    }
+    
     fetchData();
     fetchPatients();
     fetch("/api/settings").then(r => r.json()).then(data => {
@@ -387,6 +394,7 @@ export default function AdminDashboard() {
   };
 
   if (loadingSession || !session) return <div className="flex h-screen items-center justify-center">Memuat...</div>;
+  const userRole = (session.user as any)?.role;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -434,10 +442,14 @@ export default function AdminDashboard() {
         <Tabs defaultValue="antrian" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="antrian" className="text-lg px-6">Manajemen Antrian</TabsTrigger>
-            <TabsTrigger value="pasien" className="text-lg px-6">Database Pasien</TabsTrigger>
+            {userRole === "owner" && (
+              <TabsTrigger value="pasien" className="text-lg px-6">Database Pasien</TabsTrigger>
+            )}
             <TabsTrigger value="dokter" className="text-lg px-6">Manajemen Dokter</TabsTrigger>
             <TabsTrigger value="pengaturan" className="text-lg px-6">Pengaturan</TabsTrigger>
-            <TabsTrigger value="rekapitulasi" className="text-lg px-6">Rekapitulasi</TabsTrigger>
+            {userRole === "owner" && (
+              <TabsTrigger value="rekapitulasi" className="text-lg px-6">Rekapitulasi</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="antrian">
@@ -595,59 +607,61 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
-          <TabsContent value="pasien">
-            <div className="mb-8 flex justify-between items-end">
-              <div>
-                <h2 className="text-3xl font-bold text-slate-800">Database Pasien</h2>
-                <p className="text-muted-foreground mt-1">Daftar semua pengguna dan pasien yang terdaftar di sistem.</p>
+          {userRole === "owner" && (
+            <TabsContent value="pasien">
+              <div className="mb-8 flex justify-between items-end">
+                <div>
+                  <h2 className="text-3xl font-bold text-slate-800">Database Pasien</h2>
+                  <p className="text-muted-foreground mt-1">Daftar semua pengguna dan pasien yang terdaftar di sistem.</p>
+                </div>
+                <Button onClick={() => fetchPatients()} variant="outline" className="shadow-sm">
+                  Refresh Data
+                </Button>
               </div>
-              <Button onClick={() => fetchPatients()} variant="outline" className="shadow-sm">
-                Refresh Data
-              </Button>
-            </div>
 
-            <Card className="shadow-lg overflow-hidden border-t-4 border-t-primary">
-              <Table>
-                <TableHeader className="bg-slate-50">
-                  <TableRow>
-                    <TableHead className="font-bold">Nama Akun (Utama)</TableHead>
-                    <TableHead className="font-bold">No WhatsApp</TableHead>
-                    <TableHead className="font-bold">Email</TableHead>
-                    <TableHead className="font-bold">Anggota Keluarga (Pasien Tambahan)</TableHead>
-                    <TableHead className="font-bold">Tgl Mendaftar</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {patientsData.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-bold text-slate-800">{user.name}</TableCell>
-                      <TableCell>{user.whatsapp || '-'}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        {user.family && user.family.length > 0 ? (
-                          <ul className="list-disc list-inside">
-                            {user.family.map((member: any) => (
-                              <li key={member.id} className="text-sm">{member.name}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <span className="text-muted-foreground text-sm italic">Tidak ada</span>
-                        )}
-                      </TableCell>
-                      <TableCell>{new Date(user.createdAt).toLocaleDateString('id-ID')}</TableCell>
-                    </TableRow>
-                  ))}
-                  {patientsData.length === 0 && (
+              <Card className="shadow-lg overflow-hidden border-t-4 border-t-primary">
+                <Table>
+                  <TableHeader className="bg-slate-50">
                     <TableRow>
-                      <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
-                        Belum ada pasien yang mendaftar.
-                      </TableCell>
+                      <TableHead className="font-bold">Nama Akun (Utama)</TableHead>
+                      <TableHead className="font-bold">No WhatsApp</TableHead>
+                      <TableHead className="font-bold">Email</TableHead>
+                      <TableHead className="font-bold">Anggota Keluarga (Pasien Tambahan)</TableHead>
+                      <TableHead className="font-bold">Tgl Mendaftar</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
+                  </TableHeader>
+                  <TableBody>
+                    {patientsData.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-bold text-slate-800">{user.name}</TableCell>
+                        <TableCell>{user.whatsapp || '-'}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          {user.family && user.family.length > 0 ? (
+                            <ul className="list-disc list-inside">
+                              {user.family.map((member: any) => (
+                                <li key={member.id} className="text-sm">{member.name}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <span className="text-muted-foreground text-sm italic">Tidak ada</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{new Date(user.createdAt).toLocaleDateString('id-ID')}</TableCell>
+                      </TableRow>
+                    ))}
+                    {patientsData.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                          Belum ada pasien yang mendaftar.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </Card>
+            </TabsContent>
+          )}
 
           <TabsContent value="dokter">
             <div className="mb-8 flex justify-between items-end">
@@ -872,66 +886,68 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="rekapitulasi">
-            <div className="mb-8 flex justify-between items-end">
-              <div>
-                <h2 className="text-3xl font-bold text-slate-800">Rekapitulasi Pasien</h2>
-                <p className="text-muted-foreground mt-1">Grafik jumlah pendaftar, selesai dilayani, dan batal per sesi praktek.</p>
+          {userRole === "owner" && (
+            <TabsContent value="rekapitulasi">
+              <div className="mb-8 flex justify-between items-end">
+                <div>
+                  <h2 className="text-3xl font-bold text-slate-800">Rekapitulasi Pasien</h2>
+                  <p className="text-muted-foreground mt-1">Grafik jumlah pendaftar, selesai dilayani, dan batal per sesi praktek.</p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <select 
+                    className="flex h-10 w-full sm:w-auto rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                    value={recapDate}
+                    onChange={(e) => setRecapDate(e.target.value)}
+                  >
+                    <option value="today">Hari Ini</option>
+                    <option value="range">Rentang Tanggal</option>
+                    <option value="all">Semua Waktu</option>
+                  </select>
+                  
+                  {recapDate === "range" && (
+                    <div className="flex gap-2 items-center mt-2 sm:mt-0">
+                      <Input 
+                        type="date" 
+                        value={recapStartDate} 
+                        onChange={(e) => setRecapStartDate(e.target.value)} 
+                        className="w-auto h-10"
+                      />
+                      <span className="text-muted-foreground">-</span>
+                      <Input 
+                        type="date" 
+                        value={recapEndDate} 
+                        onChange={(e) => setRecapEndDate(e.target.value)} 
+                        className="w-auto h-10"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <select 
-                  className="flex h-10 w-full sm:w-auto rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                  value={recapDate}
-                  onChange={(e) => setRecapDate(e.target.value)}
-                >
-                  <option value="today">Hari Ini</option>
-                  <option value="range">Rentang Tanggal</option>
-                  <option value="all">Semua Waktu</option>
-                </select>
-                
-                {recapDate === "range" && (
-                  <div className="flex gap-2 items-center mt-2 sm:mt-0">
-                    <Input 
-                      type="date" 
-                      value={recapStartDate} 
-                      onChange={(e) => setRecapStartDate(e.target.value)} 
-                      className="w-auto h-10"
-                    />
-                    <span className="text-muted-foreground">-</span>
-                    <Input 
-                      type="date" 
-                      value={recapEndDate} 
-                      onChange={(e) => setRecapEndDate(e.target.value)} 
-                      className="w-auto h-10"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
 
-            <Card className="shadow-lg border-t-4 border-t-primary p-6">
-              <div className="h-[400px] w-full">
-                {recapData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={recapData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="Daftar" fill="#3b82f6" name="Total Daftar" />
-                      <Bar dataKey="Selesai" fill="#22c55e" name="Selesai Dilayani" />
-                      <Bar dataKey="Batal" fill="#ef4444" name="Batal" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    Belum ada data antrian untuk ditampilkan.
-                  </div>
-                )}
-              </div>
-            </Card>
-          </TabsContent>
+              <Card className="shadow-lg border-t-4 border-t-primary p-6">
+                <div className="h-[400px] w-full">
+                  {recapData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={recapData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="Daftar" fill="#3b82f6" name="Total Daftar" />
+                        <Bar dataKey="Selesai" fill="#22c55e" name="Selesai Dilayani" />
+                        <Bar dataKey="Batal" fill="#ef4444" name="Batal" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      Belum ada data antrian untuk ditampilkan.
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </main>
 

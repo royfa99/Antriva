@@ -7,6 +7,16 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+      },
+      whatsapp: {
+        type: "string",
+      }
+    }
+  },
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
