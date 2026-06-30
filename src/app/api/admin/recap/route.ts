@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { queues, schedules, doctors } from "@/db/schema";
+import { queues, schedules, doctors, user, patients } from "@/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { getWIBDateString } from "@/lib/utils";
 
@@ -21,37 +21,42 @@ export async function GET(req: Request) {
 
     let allQueues;
     
+    let baseQuery = db
+      .select({
+        queue: queues,
+        user: user,
+        patient: patients,
+        doctor: doctors
+      })
+      .from(queues)
+      .innerJoin(user, eq(queues.userId, user.id))
+      .leftJoin(patients, eq(queues.patientId, patients.id))
+      .innerJoin(schedules, eq(queues.scheduleId, schedules.id))
+      .innerJoin(doctors, eq(schedules.doctorId, doctors.id));
+
     if (dateParam === 'range' && startDateParam && endDateParam) {
-      allQueues = await db
-        .select()
-        .from(queues)
-        .where(
-          and(
-            gte(queues.date, startDateParam),
-            lte(queues.date, endDateParam)
-          )
-        );
+      allQueues = await baseQuery.where(
+        and(
+          gte(queues.date, startDateParam),
+          lte(queues.date, endDateParam)
+        )
+      );
     } else {
       const targetDate = dateParam === 'all' ? null : (dateParam || getWIBDateString());
       if (targetDate) {
-        allQueues = await db
-          .select()
-          .from(queues)
-          .where(eq(queues.date, targetDate));
+        allQueues = await baseQuery.where(eq(queues.date, targetDate));
       } else {
-        allQueues = await db
-          .select()
-          .from(queues);
+        allQueues = await baseQuery;
       }
     }
 
-    const recapData = scheds.map(s => {
-      const sQueues = allQueues.filter(q => q.scheduleId === s.schedule.id);
+    const chartData = scheds.map(s => {
+      const sQueues = allQueues.filter(q => q.queue.scheduleId === s.schedule.id);
       
       const total = sQueues.length;
-      const selesai = sQueues.filter(q => q.status === 'selesai' || q.status === 'dipanggil').length;
-      const batal = sQueues.filter(q => q.status === 'batal').length;
-      const menunggu = sQueues.filter(q => q.status === 'menunggu').length;
+      const selesai = sQueues.filter(q => q.queue.status === 'selesai' || q.queue.status === 'dipanggil').length;
+      const batal = sQueues.filter(q => q.queue.status === 'batal').length;
+      const menunggu = sQueues.filter(q => q.queue.status === 'menunggu').length;
       
       return {
         id: s.schedule.id,
@@ -63,7 +68,18 @@ export async function GET(req: Request) {
       };
     });
 
-    return NextResponse.json(recapData);
+    return NextResponse.json({
+      chartData,
+      patientData: allQueues.map(q => ({
+        id: q.queue.id,
+        queueNumber: q.queue.queueNumber,
+        date: q.queue.date,
+        patientName: q.patient?.name || q.user.name,
+        doctorName: q.doctor.name,
+        isPresent: q.queue.isPresent,
+        status: q.queue.status
+      }))
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

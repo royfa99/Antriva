@@ -14,12 +14,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getWIBDay, getWIBDateString } from "@/lib/utils";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<any[]>([]);
   const [recapData, setRecapData] = useState<any[]>([]);
+  const [recapPatientData, setRecapPatientData] = useState<any[]>([]);
   const [patientsData, setPatientsData] = useState<any[]>([]);
   const [recapDate, setRecapDate] = useState<string>("today");
   const [recapStartDate, setRecapStartDate] = useState<string>(getWIBDateString());
@@ -70,7 +71,8 @@ export default function AdminDashboard() {
         : `/api/admin/recap?date=${date}`;
       const res = await fetch(url);
       const data = await res.json();
-      setRecapData(data);
+      setRecapData(data.chartData || data);
+      setRecapPatientData(data.patientData || []);
     } catch (e) {
       console.error(e);
     }
@@ -395,6 +397,12 @@ export default function AdminDashboard() {
 
   if (loadingSession || !session) return <div className="flex h-screen items-center justify-center">Memuat...</div>;
   const userRole = (session.user as any)?.role;
+
+  const groupedPatients = recapPatientData.reduce((acc, curr) => {
+    if (!acc[curr.date]) acc[curr.date] = [];
+    acc[curr.date].push(curr);
+    return acc;
+  }, {} as Record<string, any[]>);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -925,26 +933,84 @@ export default function AdminDashboard() {
               </div>
 
               <Card className="shadow-lg border-t-4 border-t-primary p-6">
-                <div className="h-[400px] w-full">
-                  {recapData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={recapData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="Daftar" fill="#3b82f6" name="Total Daftar" />
-                        <Bar dataKey="Selesai" fill="#22c55e" name="Selesai Dilayani" />
-                        <Bar dataKey="Batal" fill="#ef4444" name="Batal" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                      Belum ada data antrian untuk ditampilkan.
-                    </div>
-                  )}
-                </div>
+                <h3 className="text-xl font-bold mb-4">Statistik Antrian</h3>
+                {recapData.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="bg-slate-50">
+                        <TableRow>
+                          <TableHead className="font-bold">Dokter & Sesi</TableHead>
+                          <TableHead className="font-bold text-center">Total Daftar</TableHead>
+                          <TableHead className="font-bold text-center">Menunggu</TableHead>
+                          <TableHead className="font-bold text-center">Selesai</TableHead>
+                          <TableHead className="font-bold text-center">Batal</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recapData.map((d: any) => (
+                          <TableRow key={d.id}>
+                            <TableCell className="font-medium text-slate-900">{d.name}</TableCell>
+                            <TableCell className="text-center font-bold text-blue-600">{d.Daftar}</TableCell>
+                            <TableCell className="text-center text-orange-600 font-medium">{d.Menunggu}</TableCell>
+                            <TableCell className="text-center text-green-600 font-medium">{d.Selesai}</TableCell>
+                            <TableCell className="text-center text-red-600 font-medium">{d.Batal}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    Belum ada data statistik untuk ditampilkan.
+                  </div>
+                )}
+              </Card>
+
+              <Card className="shadow-lg border-t-4 border-t-primary p-6 mt-6">
+                <h3 className="text-xl font-bold mb-4">Daftar Kehadiran Pasien</h3>
+                {Object.keys(groupedPatients).sort((a, b) => new Date(b).getTime() - new Date(a).getTime()).map(date => (
+                  <div key={date} className="mb-6 border rounded-md overflow-hidden">
+                    <h4 className="font-semibold text-lg bg-slate-100 p-3 border-b">{new Date(date).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h4>
+                    <Table>
+                      <TableHeader className="bg-slate-50">
+                        <TableRow>
+                          <TableHead className="font-bold w-[100px]">No.</TableHead>
+                          <TableHead className="font-bold">Nama Pasien</TableHead>
+                          <TableHead className="font-bold">Dokter</TableHead>
+                          <TableHead className="font-bold text-center">Status</TableHead>
+                          <TableHead className="font-bold text-center">Kehadiran</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {groupedPatients[date].map((p: any) => (
+                          <TableRow key={p.id}>
+                            <TableCell className="font-bold text-slate-700">A-{p.queueNumber}</TableCell>
+                            <TableCell className="font-medium text-slate-900">{p.patientName}</TableCell>
+                            <TableCell>{p.doctorName}</TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline" className={
+                                p.status === 'menunggu' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                p.status === 'dipanggil' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                p.status === 'selesai' ? 'bg-green-50 text-green-700 border-green-200' :
+                                'bg-slate-50 text-slate-700 border-slate-200'
+                              }>
+                                {p.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant={p.isPresent ? "default" : "outline"} className={p.isPresent ? 'bg-green-600' : 'text-slate-500'}>
+                                {p.isPresent ? 'Hadir' : 'Tidak Hadir'}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ))}
+                {Object.keys(groupedPatients).length === 0 && (
+                  <div className="text-center text-muted-foreground py-8">Belum ada data pasien pendaftar.</div>
+                )}
               </Card>
             </TabsContent>
           )}
