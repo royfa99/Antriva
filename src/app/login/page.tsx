@@ -65,7 +65,11 @@ export default function LoginPage() {
         }
       }
 
-      if (whatsapp === "admin") {
+      // Check role from API after login/signup
+      const { data: sessionData } = await authClient.getSession();
+      const userRole = (sessionData?.user as any)?.role;
+
+      if (userRole === "admin" || userRole === "owner") {
         router.push("/admin");
       } else {
         router.push("/patient");
