@@ -254,7 +254,7 @@ export default function AdminDashboard() {
 
   const handleCallNext = async (scheduleId: string) => {
     try {
-      await (async (...args) => { const r = await callNextQueue(...args); if (r?.error) throw new Error(r.error); return r; })(scheduleId);
+      await (async (...args) => { const r = await callNextQueue(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })(scheduleId);
       await fetchData();
     } catch (e: any) {
       alert(e.message || "Gagal memanggil antrian berikutnya");
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
   const handleCallSpecific = async (scheduleId: string, queueId: string, queueNumber: number) => {
     if (!confirm(`Panggil antrian A-${queueNumber} secara manual?`)) return;
     try {
-      await (async (...args) => { const r = await callSpecificQueue(...args); if (r?.error) throw new Error(r.error); return r; })(scheduleId, queueId);
+      await (async (...args) => { const r = await callSpecificQueue(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })(scheduleId, queueId);
       await fetchData();
     } catch (e: any) {
       alert(e.message || "Gagal memanggil antrian spesifik");
@@ -273,7 +273,7 @@ export default function AdminDashboard() {
 
   const handleToggleAttendance = async (queueId: string, isPresent: boolean) => {
     try {
-      await (async (...args) => { const r = await toggleAttendance(...args); if (r?.error) throw new Error(r.error); return r; })(queueId, isPresent);
+      await (async (...args) => { const r = await toggleAttendance(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })(queueId, isPresent);
       await fetchData();
     } catch (e: any) {
       alert(e.message || "Gagal mengubah status kehadiran");
@@ -283,17 +283,17 @@ export default function AdminDashboard() {
   const handleSaveSettings = async () => {
     setIsSavingSettings(true);
     try {
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("monitor_video", videoUrl);
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("clinic_name", clinicName);
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("hero_title", heroTitle);
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("hero_highlight", heroHighlight);
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("hero_subtitle", heroSubtitle);
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("ticker_text", tickerText);
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("ticker_speed", tickerSpeed.toString());
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("logo_url", logoUrl);
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("monitor_schedules", JSON.stringify(monitorSchedules));
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("voice_template", voiceTemplate);
-      await (async (...args) => { const r = await updateSetting(...args); if (r?.error) throw new Error(r.error); return r; })("bell_sound", bellSound);
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("monitor_video", videoUrl);
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("clinic_name", clinicName);
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("hero_title", heroTitle);
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("hero_highlight", heroHighlight);
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("hero_subtitle", heroSubtitle);
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("ticker_text", tickerText);
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("ticker_speed", tickerSpeed.toString());
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("logo_url", logoUrl);
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("monitor_schedules", JSON.stringify(monitorSchedules));
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("voice_template", voiceTemplate);
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("bell_sound", bellSound);
       alert("Pengaturan berhasil disimpan.");
     } catch (e: any) {
       alert(e.message || "Gagal menyimpan pengaturan");
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
 
   const handleRecall = async (scheduleId: string) => {
     try {
-      await (async (...args) => { const r = await recallQueue(...args); if (r?.error) throw new Error(r.error); return r; })(scheduleId);
+      await (async (...args) => { const r = await recallQueue(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })(scheduleId);
       await fetchData();
     } catch (e: any) {
       alert(e.message || "Gagal memanggil ulang antrian");
@@ -313,7 +313,7 @@ export default function AdminDashboard() {
 
   const handleFinish = async (scheduleId: string) => {
     try {
-      await (async (...args) => { const r = await finishCurrentQueue(...args); if (r?.error) throw new Error(r.error); return r; })(scheduleId);
+      await (async (...args) => { const r = await finishCurrentQueue(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })(scheduleId);
       await fetchData();
     } catch (e: any) {
       alert(e.message || "Gagal menyelesaikan antrian");
@@ -359,7 +359,7 @@ export default function AdminDashboard() {
     setIsSubmitting(true);
     try {
       if (editingDoc) {
-        await (async (...args) => { const r = await updateDoctor(...args); if (r?.error) throw new Error(r.error); return r; })(editingDoc.doctor.id, {
+        await (async (...args) => { const r = await updateDoctor(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })(editingDoc.doctor.id, {
           name: docName,
           specialization: docSpec,
           scheduleId: editingDoc.schedule?.id || "",
@@ -368,7 +368,7 @@ export default function AdminDashboard() {
           endTime: docEnd
         });
       } else {
-        await (async (...args) => { const r = await addDoctor(...args); if (r?.error) throw new Error(r.error); return r; })({
+        await (async (...args) => { const r = await addDoctor(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })({
           name: docName,
           specialization: docSpec,
           dayInt: parseInt(docDay),
@@ -388,7 +388,7 @@ export default function AdminDashboard() {
   const handleDeleteDoc = async (id: string) => {
     if (!confirm("Yakin ingin menghapus jadwal ini? Jika ini adalah jadwal terakhir dokter, maka dokter juga akan terhapus.")) return;
     try {
-      await (async (...args) => { const r = await deleteSchedule(...args); if (r?.error) throw new Error(r.error); return r; })(id);
+      await (async (...args) => { const r = await deleteSchedule(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })(id);
       fetchData();
     } catch (err: any) {
       alert(err.message || "Gagal menghapus jadwal");
