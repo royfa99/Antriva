@@ -14,6 +14,10 @@ export const auth = betterAuth({
       },
       whatsapp: {
         type: "string",
+      },
+      norm: {
+        type: "string",
+        required: false,
       }
     }
   },

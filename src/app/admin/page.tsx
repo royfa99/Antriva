@@ -65,6 +65,8 @@ export default function AdminDashboard() {
   const [patientName, setPatientName] = useState("");
   const [patientWhatsapp, setPatientWhatsapp] = useState("");
   const [familyMemberName, setFamilyMemberName] = useState("");
+  const [patientNorm, setPatientNorm] = useState("");
+  const [familyMemberNorm, setFamilyMemberNorm] = useState("");
   const [selectedParentUser, setSelectedParentUser] = useState<any>(null);
 
   const [isQueueRegisterOpen, setIsQueueRegisterOpen] = useState(false);
@@ -363,10 +365,12 @@ export default function AdminDashboard() {
       setEditingUser(user);
       setPatientName(user.name);
       setPatientWhatsapp(user.whatsapp || "");
+      setPatientNorm(user.norm || "");
     } else {
       setEditingUser(null);
       setPatientName("");
       setPatientWhatsapp("");
+      setPatientNorm("");
     }
     setIsUserDialogOpen(true);
   };
@@ -376,10 +380,10 @@ export default function AdminDashboard() {
     setIsSubmitting(true);
     try {
       if (editingUser) {
-        const res = await adminUpdateUser(editingUser.id, { name: patientName, whatsapp: patientWhatsapp });
+        const res = await adminUpdateUser(editingUser.id, { name: patientName, whatsapp: patientWhatsapp, norm: patientNorm });
         if (res.error) throw new Error(res.error);
       } else {
-        const res = await adminAddUser(patientName, patientWhatsapp);
+        const res = await adminAddUser(patientName, patientWhatsapp, patientNorm);
         if (res.error) throw new Error(res.error);
       }
       setIsUserDialogOpen(false);
@@ -407,9 +411,11 @@ export default function AdminDashboard() {
     if (member) {
       setEditingFamily(member);
       setFamilyMemberName(member.name);
+      setFamilyMemberNorm(member.norm || "");
     } else {
       setEditingFamily(null);
       setFamilyMemberName("");
+      setFamilyMemberNorm("");
     }
     setIsFamilyDialogOpen(true);
   };
@@ -419,10 +425,10 @@ export default function AdminDashboard() {
     setIsSubmitting(true);
     try {
       if (editingFamily) {
-        const res = await adminUpdateFamilyMember(editingFamily.id, familyMemberName);
+        const res = await adminUpdateFamilyMember(editingFamily.id, familyMemberName, familyMemberNorm);
         if (res.error) throw new Error(res.error);
       } else {
-        const res = await adminAddFamilyMember(selectedParentUser.id, familyMemberName);
+        const res = await adminAddFamilyMember(selectedParentUser.id, familyMemberName, familyMemberNorm);
         if (res.error) throw new Error(res.error);
       }
       setIsFamilyDialogOpen(false);
@@ -665,6 +671,9 @@ export default function AdminDashboard() {
                             </div>
                             <div>
                               <p className="font-bold text-lg text-slate-800">{item.currentCalled.patient?.name || item.currentCalled.user.name}</p>
+                              {(item.currentCalled.patient?.norm || item.currentCalled.user.norm) && (
+                                <p className="text-sm font-medium text-slate-500 mb-1">RM: {item.currentCalled.patient?.norm || item.currentCalled.user.norm}</p>
+                              )}
                               <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0 mt-1">Dipanggil</Badge>
                             </div>
                           </div>
@@ -710,6 +719,7 @@ export default function AdminDashboard() {
                           <TableRow>
                             <TableHead className="w-[100px] font-bold">No.</TableHead>
                             <TableHead className="font-bold">Nama Pasien</TableHead>
+                            <TableHead className="font-bold">No. RM</TableHead>
                             <TableHead className="text-center font-bold">Kehadiran</TableHead>
                             <TableHead className="text-right font-bold">Aksi</TableHead>
                           </TableRow>
@@ -720,6 +730,7 @@ export default function AdminDashboard() {
                               <TableRow key={q.queue.id} className={q.queue.status === 'dipanggil' ? 'bg-blue-50/50' : ''}>
                                 <TableCell className="font-bold text-slate-700">A-{q.queue.queueNumber}</TableCell>
                                 <TableCell className="font-medium text-slate-900">{q.patient?.name || q.user.name}</TableCell>
+                                <TableCell>{q.patient?.norm || q.user.norm || '-'}</TableCell>
                                 <TableCell className="text-center">
                                   {q.queue.status === 'menunggu' && (
                                     <Button
@@ -801,6 +812,7 @@ export default function AdminDashboard() {
                     <TableRow>
                       <TableHead className="font-bold">Nama Akun (Utama)</TableHead>
                       <TableHead className="font-bold">No WhatsApp</TableHead>
+                      <TableHead className="font-bold">No. RM</TableHead>
                       <TableHead className="font-bold">Email</TableHead>
                       <TableHead className="font-bold">Anggota Keluarga (Pasien Tambahan)</TableHead>
                       <TableHead className="font-bold">Tgl Mendaftar</TableHead>
@@ -812,6 +824,7 @@ export default function AdminDashboard() {
                       <TableRow key={user.id}>
                         <TableCell className="font-bold text-slate-800">{user.name}</TableCell>
                         <TableCell>{user.whatsapp || '-'}</TableCell>
+                        <TableCell>{user.norm || '-'}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           {user.family && user.family.length > 0 ? (
@@ -819,7 +832,7 @@ export default function AdminDashboard() {
                               {user.family.map((member: any) => (
                                 
                                 <li key={member.id} className="text-sm flex items-center justify-between py-1 border-b last:border-0 border-slate-100">
-                                  <span>{member.name}</span>
+                                  <span>{member.name} {member.norm ? <span className="text-xs text-muted-foreground ml-2">(RM: {member.norm})</span> : null}</span>
                                   <div className="flex items-center gap-1">
                                     <button onClick={() => openQueueRegisterDialog(user, member)} className="text-green-500 hover:text-green-700 p-1" title="Daftarkan ke antrian hari ini">
                                       <CalendarCheck className="w-3 h-3" />
@@ -1331,6 +1344,10 @@ export default function AdminDashboard() {
                 <Input id="patientWhatsapp" value={patientWhatsapp} onChange={(e) => setPatientWhatsapp(e.target.value)} required placeholder="0812xxxxxx" />
                 {!editingUser && <p className="text-xs text-muted-foreground">Password otomatis akan diset ke: <b>password123</b></p>}
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="patientNorm">Nomor Rekam Medis (Opsional)</Label>
+                <Input id="patientNorm" value={patientNorm} onChange={(e) => setPatientNorm(e.target.value)} placeholder="Contoh: RM-12345" />
+              </div>
             </div>
             <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
               <Button type="button" variant="ghost" onClick={() => setIsUserDialogOpen(false)}>Batal</Button>
@@ -1355,6 +1372,10 @@ export default function AdminDashboard() {
               <div className="grid gap-2">
                 <Label htmlFor="familyMemberName">Nama Pasien</Label>
                 <Input id="familyMemberName" value={familyMemberName} onChange={(e) => setFamilyMemberName(e.target.value)} required placeholder="Budi Santoso" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="familyMemberNorm">Nomor Rekam Medis (Opsional)</Label>
+                <Input id="familyMemberNorm" value={familyMemberNorm} onChange={(e) => setFamilyMemberNorm(e.target.value)} placeholder="Contoh: RM-12346" />
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-4 pt-4 border-t">

@@ -12,6 +12,7 @@ export const user = pgTable("user", {
   // Custom fields
   whatsapp: text("whatsapp"),
   role: text("role").default("patient").notNull(), // 'patient' or 'admin'
+  norm: text("norm"), // Nomor Rekam Medis
 });
 
 export const session = pgTable("session", {
@@ -55,6 +56,7 @@ export const patients = pgTable("patients", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => user.id),
   name: text("name").notNull(),
+  norm: text("norm"), // Nomor Rekam Medis
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
 });

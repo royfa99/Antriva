@@ -425,7 +425,7 @@ export async function deletePatient(patientId: string) {
 
 
 // Admin actions for Patient Management
-export async function adminAddUser(name: string, whatsapp: string) {
+export async function adminAddUser(name: string, whatsapp: string, norm?: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user || (session.user.role !== "admin" && session.user.role !== "owner")) return { error: "Unauthorized" };
 
@@ -436,7 +436,7 @@ export async function adminAddUser(name: string, whatsapp: string) {
 
   try {
      const res = await auth.api.signUpEmail({
-       body: { email, password: "password123", name, whatsapp, role: "patient" },
+       body: { email, password: "password123", name, whatsapp, role: "patient", norm: norm || undefined },
        headers: new Headers()
      });
      
@@ -446,7 +446,7 @@ export async function adminAddUser(name: string, whatsapp: string) {
   }
 }
 
-export async function adminUpdateUser(userId: string, data: { name: string, whatsapp: string }) {
+export async function adminUpdateUser(userId: string, data: { name: string, whatsapp: string, norm?: string }) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user || (session.user.role !== "admin" && session.user.role !== "owner")) return { error: "Unauthorized" };
 
@@ -456,6 +456,7 @@ export async function adminUpdateUser(userId: string, data: { name: string, what
   await db.update(user).set({
     name: data.name,
     whatsapp: data.whatsapp,
+    norm: data.norm || null,
     email: `${data.whatsapp}@klinik.local`,
     updatedAt: new Date()
   }).where(eq(user.id, userId));
@@ -496,7 +497,7 @@ export async function adminDeleteUser(userId: string) {
   return { success: true };
 }
 
-export async function adminAddFamilyMember(userId: string, name: string) {
+export async function adminAddFamilyMember(userId: string, name: string, norm?: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user || (session.user.role !== "admin" && session.user.role !== "owner")) return { error: "Unauthorized" };
 
@@ -504,6 +505,7 @@ export async function adminAddFamilyMember(userId: string, name: string) {
     id: crypto.randomUUID(),
     userId,
     name,
+    norm: norm || null,
     createdAt: new Date(),
     updatedAt: new Date()
   });
@@ -511,11 +513,11 @@ export async function adminAddFamilyMember(userId: string, name: string) {
   return { success: true };
 }
 
-export async function adminUpdateFamilyMember(patientId: string, name: string) {
+export async function adminUpdateFamilyMember(patientId: string, name: string, norm?: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user || (session.user.role !== "admin" && session.user.role !== "owner")) return { error: "Unauthorized" };
 
-  await db.update(patients).set({ name, updatedAt: new Date() }).where(eq(patients.id, patientId));
+  await db.update(patients).set({ name, norm: norm || null, updatedAt: new Date() }).where(eq(patients.id, patientId));
   return { success: true };
 }
 
