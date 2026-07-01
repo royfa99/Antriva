@@ -70,6 +70,7 @@ export default function AdminDashboard() {
   const [isQueueRegisterOpen, setIsQueueRegisterOpen] = useState(false);
   const [queueRegisterTarget, setQueueRegisterTarget] = useState<any>(null); // { parentUser, member }
   const [selectedScheduleId, setSelectedScheduleId] = useState("");
+  const [registerDate, setRegisterDate] = useState("");
 
 
 
@@ -448,19 +449,20 @@ export default function AdminDashboard() {
   const openQueueRegisterDialog = (parentUser: any, member: any = null) => {
     setQueueRegisterTarget({ parentUser, member });
     setSelectedScheduleId("");
+    setRegisterDate(getWIBDateString());
     setIsQueueRegisterOpen(true);
   };
 
   const handleRegisterQueue = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedScheduleId) return alert("Pilih jadwal dokter terlebih dahulu");
+    if (!registerDate) return alert("Pilih tanggal pendaftaran");
     setIsSubmitting(true);
     try {
-      const today = getWIBDateString();
       const targetUserId = queueRegisterTarget.parentUser.id;
       const patientId = queueRegisterTarget.member ? queueRegisterTarget.member.id : undefined;
       
-      const res = await adminTakeQueue(selectedScheduleId, today, targetUserId, patientId);
+      const res = await adminTakeQueue(selectedScheduleId, registerDate, targetUserId, patientId);
       if (res.error) throw new Error(res.error);
       
       alert(`Berhasil mendaftar! Nomor Antrian: ${res.queueNumber}`);
@@ -1369,7 +1371,7 @@ export default function AdminDashboard() {
         <DialogContent className="sm:max-w-[425px]">
           <form onSubmit={handleRegisterQueue}>
             <DialogHeader>
-              <DialogTitle className="text-xl">Daftarkan Antrian (Hari Ini)</DialogTitle>
+              <DialogTitle className="text-xl">Daftarkan Antrian</DialogTitle>
               {queueRegisterTarget && (
                 <div className="mt-2 text-sm text-muted-foreground">
                   <p>Pasien: <b>{queueRegisterTarget.member ? queueRegisterTarget.member.name : queueRegisterTarget.parentUser.name}</b></p>
@@ -1377,6 +1379,17 @@ export default function AdminDashboard() {
               )}
             </DialogHeader>
             <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="registerDate">Pilih Tanggal</Label>
+                <Input 
+                  id="registerDate" 
+                  type="date" 
+                  value={registerDate}
+                  onChange={(e) => setRegisterDate(e.target.value)}
+                  min={getWIBDateString()}
+                  required 
+                />
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="scheduleSelect">Pilih Dokter & Jadwal</Label>
                 <select 
@@ -1387,20 +1400,24 @@ export default function AdminDashboard() {
                   required
                 >
                   <option value="" disabled>-- Pilih Dokter --</option>
-                  {dashboardData.map((d: any) => (
+                  {dashboardData.filter(d => {
+                      if (!registerDate) return false;
+                      const dateObj = new Date(registerDate);
+                      return d.schedule.dayInt === dateObj.getDay();
+                  }).map((d: any) => (
                     <option key={d.schedule.id} value={d.schedule.id}>
                       {d.doctor.name} ({d.schedule.startTime} - {d.schedule.endTime})
                     </option>
                   ))}
                 </select>
-                {dashboardData.length === 0 && (
-                  <p className="text-xs text-red-500">Tidak ada jadwal dokter hari ini.</p>
+                {registerDate && dashboardData.filter(d => new Date(registerDate).getDay() === d.schedule.dayInt).length === 0 && (
+                  <p className="text-xs text-red-500">Tidak ada jadwal dokter untuk tanggal ini.</p>
                 )}
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
               <Button type="button" variant="ghost" onClick={() => setIsQueueRegisterOpen(false)}>Batal</Button>
-              <Button type="submit" className="px-8 bg-green-600 hover:bg-green-700 text-white" disabled={isSubmitting || dashboardData.length === 0}>
+              <Button type="submit" className="px-8 bg-green-600 hover:bg-green-700 text-white" disabled={isSubmitting || (registerDate ? dashboardData.filter(d => new Date(registerDate).getDay() === d.schedule.dayInt).length === 0 : true)}>
                 {isSubmitting ? "Mendaftarkan..." : "Daftarkan"}
               </Button>
             </div>
