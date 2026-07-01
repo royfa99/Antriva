@@ -24,6 +24,7 @@ export default function PatientDashboard() {
   const [patientsList, setPatientsList] = useState<any[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [newPatientName, setNewPatientName] = useState("");
+  const [newPatientNorm, setNewPatientNorm] = useState("");
   const [isAddingPatient, setIsAddingPatient] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = useState<string>("");
@@ -154,8 +155,9 @@ export default function PatientDashboard() {
     if (!newPatientName.trim()) return;
     setIsAddingPatient(true);
     try {
-      await (async (...args) => { const r = await addPatient(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })(newPatientName);
+      await (async (...args) => { const r = await addPatient(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })(newPatientName, newPatientNorm);
       setNewPatientName("");
+      setNewPatientNorm("");
       await fetchPatientsList();
     } catch (e: any) {
       alert(e.message || "Gagal menambah profil");
@@ -288,16 +290,23 @@ export default function PatientDashboard() {
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>
                   <h4 className="text-sm font-semibold mb-3 text-muted-foreground">Tambah Profil Baru</h4>
-                  <form onSubmit={handleAddPatient} className="flex gap-2">
+                  <form onSubmit={handleAddPatient} className="space-y-2">
                     <Input 
                       placeholder="Nama Lengkap Anak" 
                       value={newPatientName} 
                       onChange={(e) => setNewPatientName(e.target.value)} 
                       required 
                     />
-                    <Button type="submit" disabled={isAddingPatient} variant="secondary">
-                      {isAddingPatient ? "..." : <UserPlus className="w-4 h-4" />}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="No RM (Opsional)" 
+                        value={newPatientNorm} 
+                        onChange={(e) => setNewPatientNorm(e.target.value)} 
+                      />
+                      <Button type="submit" disabled={isAddingPatient} variant="secondary">
+                        {isAddingPatient ? "..." : <UserPlus className="w-4 h-4" />}
+                      </Button>
+                    </div>
                   </form>
                 </div>
                 <div>
@@ -306,7 +315,7 @@ export default function PatientDashboard() {
                     <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
                       {patientsList.map(p => (
                         <div key={p.id} className="flex items-center justify-between p-2 rounded-md border bg-white">
-                          <span className="font-medium text-sm">{p.name}</span>
+                          <span className="font-medium text-sm">{p.name} {p.norm && <span className="text-xs text-muted-foreground ml-1">(RM: {p.norm})</span>}</span>
                           <Button 
                             variant="ghost" 
                             size="icon" 

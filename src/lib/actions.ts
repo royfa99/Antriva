@@ -374,7 +374,7 @@ export async function getMonitorVideo() {
   return existing?.value || "https://www.youtube.com/embed/jfKfPfyJRdk";
 }
 
-export async function addPatient(name: string) {
+export async function addPatient(name: string, norm?: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return { error: "Unauthorized" };
 
@@ -382,6 +382,7 @@ export async function addPatient(name: string) {
     id: crypto.randomUUID(),
     userId: session.user.id,
     name,
+    norm: norm || null,
     createdAt: new Date(),
     updatedAt: new Date()
   }).returning();
