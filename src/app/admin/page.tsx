@@ -1272,6 +1272,58 @@ export default function AdminDashboard() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleSaveUser}>
+            <DialogHeader>
+              <DialogTitle className="text-xl">{editingUser ? "Edit Akun Utama" : "Tambah Akun Utama"}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="patientName">Nama Lengkap</Label>
+                <Input id="patientName" value={patientName} onChange={(e) => setPatientName(e.target.value)} required placeholder="Siti Aminah" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="patientWhatsapp">No WhatsApp / Telp</Label>
+                <Input id="patientWhatsapp" value={patientWhatsapp} onChange={(e) => setPatientWhatsapp(e.target.value)} required placeholder="0812xxxxxx" />
+                {!editingUser && <p className="text-xs text-muted-foreground">Password otomatis akan diset ke: <b>password123</b></p>}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+              <Button type="button" variant="ghost" onClick={() => setIsUserDialogOpen(false)}>Batal</Button>
+              <Button type="submit" className="px-8" disabled={isSubmitting}>
+                {isSubmitting ? "Menyimpan..." : "Simpan Data"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isFamilyDialogOpen} onOpenChange={setIsFamilyDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleSaveFamily}>
+            <DialogHeader>
+              <DialogTitle className="text-xl">{editingFamily ? "Edit Anggota Keluarga" : "Tambah Anggota Keluarga"}</DialogTitle>
+              {selectedParentUser && (
+                <p className="text-sm text-muted-foreground mt-1">Akun Utama: {selectedParentUser.name}</p>
+              )}
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="familyMemberName">Nama Pasien</Label>
+                <Input id="familyMemberName" value={familyMemberName} onChange={(e) => setFamilyMemberName(e.target.value)} required placeholder="Budi Santoso" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+              <Button type="button" variant="ghost" onClick={() => setIsFamilyDialogOpen(false)}>Batal</Button>
+              <Button type="submit" className="px-8" disabled={isSubmitting}>
+                {isSubmitting ? "Menyimpan..." : "Simpan Data"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
