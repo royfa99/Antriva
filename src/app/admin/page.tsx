@@ -1077,6 +1077,11 @@ export default function AdminDashboard() {
                       <Label htmlFor="access-rekap" className="font-medium cursor-pointer">Rekapitulasi</Label>
                     </div>
                   </div>
+                  <div className="mt-6">
+                    <Button onClick={handleSaveSettings} disabled={isSavingSettings} className="w-full">
+                      {isSavingSettings ? "Menyimpan..." : "Simpan Hak Akses Admin"}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
