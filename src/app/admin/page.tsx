@@ -819,6 +819,9 @@ export default function AdminDashboard() {
                                 <li key={member.id} className="text-sm flex items-center justify-between py-1 border-b last:border-0 border-slate-100">
                                   <span>{member.name}</span>
                                   <div className="flex items-center gap-1">
+                                    <button onClick={() => openQueueRegisterDialog(user, member)} className="text-green-500 hover:text-green-700 p-1" title="Daftarkan ke antrian hari ini">
+                                      <CalendarCheck className="w-3 h-3" />
+                                    </button>
                                     <button onClick={() => openFamilyDialog(user, member)} className="text-blue-500 hover:text-blue-700 p-1" title="Edit">
                                       <Edit className="w-3 h-3" />
                                     </button>
@@ -838,6 +841,9 @@ export default function AdminDashboard() {
                         <TableCell className="text-right whitespace-nowrap">
                           <Button variant="ghost" size="sm" onClick={() => openFamilyDialog(user)} className="text-green-600 hover:text-green-800 hover:bg-green-50 mr-1" title="Tambah Anggota">
                             <Plus className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => openQueueRegisterDialog(user)} className="text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 mr-1" title="Daftarkan ke antrian hari ini">
+                            <CalendarCheck className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => openUserDialog(user)} className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 mr-1" title="Edit Akun">
                             <Edit className="w-4 h-4" />
