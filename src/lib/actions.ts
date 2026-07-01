@@ -535,3 +535,42 @@ export async function adminDeleteFamilyMember(patientId: string) {
   await db.delete(patients).where(eq(patients.id, patientId));
   return { success: true };
 }
+
+export async function adminTakeQueue(scheduleId: string, date: string, targetUserId: string, patientId?: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'owner')) return { error: 'Unauthorized' };
+
+  const existingQueue = await db.query.queues.findFirst({
+    where: and(
+      eq(queues.userId, targetUserId),
+      patientId ? eq(queues.patientId, patientId) : sql`"patient_id" IS NULL`,
+      eq(queues.scheduleId, scheduleId),
+      eq(queues.date, date),
+      inArray(queues.status, ['menunggu', 'dipanggil'])
+    )
+  });
+
+  if (existingQueue) return { error: 'Pasien ini sudah terdaftar pada jadwal dokter tersebut hari ini.' };
+
+  const latestQueue = await db.query.queues.findFirst({
+    where: and(eq(queues.scheduleId, scheduleId), eq(queues.date, date)),
+    orderBy: (q, { desc }) => [desc(q.queueNumber)]
+  });
+  const nextNumber = latestQueue ? latestQueue.queueNumber + 1 : 1;
+
+  await db.insert(queues).values({
+    id: crypto.randomUUID(),
+    userId: targetUserId,
+    patientId: patientId || null,
+    scheduleId,
+    queueNumber: nextNumber,
+    sortOrder: nextNumber,
+    isPresent: true,
+    date,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
+
+  eventEmitter.emit('queue_updated');
+  return { success: true, queueNumber: nextNumber };
+}

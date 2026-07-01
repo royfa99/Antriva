@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { callNextQueue, recallQueue, finishCurrentQueue, callSpecificQueue, addDoctor, updateDoctor, deleteSchedule, updateSetting, toggleAttendance, adminAddUser, adminUpdateUser, adminDeleteUser, adminAddFamilyMember, adminUpdateFamilyMember, adminDeleteFamilyMember } from "@/lib/actions";
-import { LogOut, LayoutDashboard, Users, UserCheck, Stethoscope, Trash2, Edit, Volume2, VolumeX, Hand, Plus } from "lucide-react";
+import { callNextQueue, recallQueue, finishCurrentQueue, callSpecificQueue, addDoctor, updateDoctor, deleteSchedule, updateSetting, toggleAttendance, adminAddUser, adminUpdateUser, adminDeleteUser, adminAddFamilyMember, adminUpdateFamilyMember, adminDeleteFamilyMember, adminTakeQueue } from "@/lib/actions";
+import { LogOut, LayoutDashboard, Users, UserCheck, Stethoscope, Trash2, Edit, Volume2, VolumeX, Hand, Plus, CalendarCheck } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -66,6 +66,11 @@ export default function AdminDashboard() {
   const [patientWhatsapp, setPatientWhatsapp] = useState("");
   const [familyMemberName, setFamilyMemberName] = useState("");
   const [selectedParentUser, setSelectedParentUser] = useState<any>(null);
+
+  const [isQueueRegisterOpen, setIsQueueRegisterOpen] = useState(false);
+  const [queueRegisterTarget, setQueueRegisterTarget] = useState<any>(null); // { parentUser, member }
+  const [selectedScheduleId, setSelectedScheduleId] = useState("");
+
 
 
   const prevDataRef = useRef<any[]>([]);
@@ -436,6 +441,35 @@ export default function AdminDashboard() {
       fetchPatients();
     } catch (err: any) {
       alert(err.message || "Gagal menghapus anggota keluarga");
+    }
+  };
+
+  
+  const openQueueRegisterDialog = (parentUser: any, member: any = null) => {
+    setQueueRegisterTarget({ parentUser, member });
+    setSelectedScheduleId("");
+    setIsQueueRegisterOpen(true);
+  };
+
+  const handleRegisterQueue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedScheduleId) return alert("Pilih jadwal dokter terlebih dahulu");
+    setIsSubmitting(true);
+    try {
+      const today = getWIBDateString();
+      const targetUserId = queueRegisterTarget.parentUser.id;
+      const patientId = queueRegisterTarget.member ? queueRegisterTarget.member.id : undefined;
+      
+      const res = await adminTakeQueue(selectedScheduleId, today, targetUserId, patientId);
+      if (res.error) throw new Error(res.error);
+      
+      alert(`Berhasil mendaftar! Nomor Antrian: ${res.queueNumber}`);
+      setIsQueueRegisterOpen(false);
+      fetchData(); // Refresh dashboard queues
+    } catch (err: any) {
+      alert(err.message || "Gagal mendaftarkan antrian");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1319,6 +1353,49 @@ export default function AdminDashboard() {
               <Button type="button" variant="ghost" onClick={() => setIsFamilyDialogOpen(false)}>Batal</Button>
               <Button type="submit" className="px-8" disabled={isSubmitting}>
                 {isSubmitting ? "Menyimpan..." : "Simpan Data"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isQueueRegisterOpen} onOpenChange={setIsQueueRegisterOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleRegisterQueue}>
+            <DialogHeader>
+              <DialogTitle className="text-xl">Daftarkan Antrian (Hari Ini)</DialogTitle>
+              {queueRegisterTarget && (
+                <div className="mt-2 text-sm text-muted-foreground">
+                  <p>Pasien: <b>{queueRegisterTarget.member ? queueRegisterTarget.member.name : queueRegisterTarget.parentUser.name}</b></p>
+                </div>
+              )}
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="scheduleSelect">Pilih Dokter & Jadwal</Label>
+                <select 
+                  id="scheduleSelect"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  value={selectedScheduleId}
+                  onChange={(e) => setSelectedScheduleId(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>-- Pilih Dokter --</option>
+                  {dashboardData.map((d: any) => (
+                    <option key={d.schedule.id} value={d.schedule.id}>
+                      {d.doctor.name} ({d.schedule.startTime} - {d.schedule.endTime})
+                    </option>
+                  ))}
+                </select>
+                {dashboardData.length === 0 && (
+                  <p className="text-xs text-red-500">Tidak ada jadwal dokter hari ini.</p>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+              <Button type="button" variant="ghost" onClick={() => setIsQueueRegisterOpen(false)}>Batal</Button>
+              <Button type="submit" className="px-8 bg-green-600 hover:bg-green-700 text-white" disabled={isSubmitting || dashboardData.length === 0}>
+                {isSubmitting ? "Mendaftarkan..." : "Daftarkan"}
               </Button>
             </div>
           </form>
