@@ -49,6 +49,14 @@ export default function AdminDashboard() {
   
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
+  
+  // Admin Access Permissions
+  const [adminAccessAntrian, setAdminAccessAntrian] = useState(true);
+  const [adminAccessPasien, setAdminAccessPasien] = useState(false);
+  const [adminAccessDokter, setAdminAccessDokter] = useState(true);
+  const [adminAccessPengaturan, setAdminAccessPengaturan] = useState(true);
+  const [adminAccessRekapitulasi, setAdminAccessRekapitulasi] = useState(false);
+
   // Patient Management State
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [isFamilyDialogOpen, setIsFamilyDialogOpen] = useState(false);
@@ -137,6 +145,13 @@ export default function AdminDashboard() {
       }
       if (data.voice_template) setVoiceTemplate(data.voice_template);
       if (data.bell_sound) setBellSound(data.bell_sound);
+
+      if (data.admin_access_antrian !== undefined) setAdminAccessAntrian(data.admin_access_antrian === "true");
+      if (data.admin_access_pasien !== undefined) setAdminAccessPasien(data.admin_access_pasien === "true");
+      if (data.admin_access_dokter !== undefined) setAdminAccessDokter(data.admin_access_dokter === "true");
+      if (data.admin_access_pengaturan !== undefined) setAdminAccessPengaturan(data.admin_access_pengaturan === "true");
+      if (data.admin_access_rekapitulasi !== undefined) setAdminAccessRekapitulasi(data.admin_access_rekapitulasi === "true");
+
     });
     
     const interval = setInterval(() => {
@@ -548,17 +563,24 @@ export default function AdminDashboard() {
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="antrian" className="w-full">
           <TabsList className="mb-6">
-            <TabsTrigger value="antrian" className="text-lg px-6">Manajemen Antrian</TabsTrigger>
-            {userRole === "owner" && (
+            {(userRole === "owner" || adminAccessAntrian) && (
+              <TabsTrigger value="antrian" className="text-lg px-6">Manajemen Antrian</TabsTrigger>
+            )}
+            {(userRole === "owner" || adminAccessPasien) && (
               <TabsTrigger value="pasien" className="text-lg px-6">Database Pasien</TabsTrigger>
             )}
-            <TabsTrigger value="dokter" className="text-lg px-6">Manajemen Dokter</TabsTrigger>
-            <TabsTrigger value="pengaturan" className="text-lg px-6">Pengaturan</TabsTrigger>
-            {userRole === "owner" && (
+            {(userRole === "owner" || adminAccessDokter) && (
+              <TabsTrigger value="dokter" className="text-lg px-6">Manajemen Dokter</TabsTrigger>
+            )}
+            {(userRole === "owner" || adminAccessPengaturan) && (
+              <TabsTrigger value="pengaturan" className="text-lg px-6">Pengaturan</TabsTrigger>
+            )}
+            {(userRole === "owner" || adminAccessRekapitulasi) && (
               <TabsTrigger value="rekapitulasi" className="text-lg px-6">Rekapitulasi</TabsTrigger>
             )}
           </TabsList>
 
+          {(userRole === "owner" || adminAccessAntrian) && (
           <TabsContent value="antrian">
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-slate-800">Manajemen Antrian</h2>
@@ -713,8 +735,9 @@ export default function AdminDashboard() {
               )}
             </div>
           </TabsContent>
+          )}
 
-          {userRole === "owner" && (
+          {(userRole === "owner" || adminAccessPasien) && (
             <TabsContent value="pasien">
               <div className="mb-8 flex justify-between items-end">
                 <div>
@@ -800,6 +823,7 @@ export default function AdminDashboard() {
             </TabsContent>
           )}
 
+          {(userRole === "owner" || adminAccessDokter) && (
           <TabsContent value="dokter">
             <div className="mb-8 flex justify-between items-end">
               <div>
@@ -854,7 +878,9 @@ export default function AdminDashboard() {
               </Table>
             </Card>
           </TabsContent>
+          )}
 
+          {(userRole === "owner" || adminAccessPengaturan) && (
           <TabsContent value="pengaturan">
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-slate-800">Pengaturan Sistem</h2>
@@ -1021,9 +1047,45 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          {userRole === "owner" && (
+            {userRole === "owner" && (
+              <Card className="shadow-lg border-t-4 border-t-blue-500 max-w-2xl mt-8">
+                <CardHeader>
+                  <CardTitle>Hak Akses Admin</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-6">Pilih menu apa saja yang boleh diakses oleh akun Admin. Anda (Owner) selalu memiliki akses ke semua menu.</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3 border p-3 rounded-lg bg-slate-50">
+                      <input type="checkbox" id="access-antrian" checked={adminAccessAntrian} onChange={(e) => setAdminAccessAntrian(e.target.checked)} className="rounded h-5 w-5 text-primary" />
+                      <Label htmlFor="access-antrian" className="font-medium cursor-pointer">Manajemen Antrian</Label>
+                    </div>
+                    <div className="flex items-center space-x-3 border p-3 rounded-lg bg-slate-50">
+                      <input type="checkbox" id="access-pasien" checked={adminAccessPasien} onChange={(e) => setAdminAccessPasien(e.target.checked)} className="rounded h-5 w-5 text-primary" />
+                      <Label htmlFor="access-pasien" className="font-medium cursor-pointer">Database Pasien</Label>
+                    </div>
+                    <div className="flex items-center space-x-3 border p-3 rounded-lg bg-slate-50">
+                      <input type="checkbox" id="access-dokter" checked={adminAccessDokter} onChange={(e) => setAdminAccessDokter(e.target.checked)} className="rounded h-5 w-5 text-primary" />
+                      <Label htmlFor="access-dokter" className="font-medium cursor-pointer">Manajemen Dokter</Label>
+                    </div>
+                    <div className="flex items-center space-x-3 border p-3 rounded-lg bg-slate-50">
+                      <input type="checkbox" id="access-pengaturan" checked={adminAccessPengaturan} onChange={(e) => setAdminAccessPengaturan(e.target.checked)} className="rounded h-5 w-5 text-primary" />
+                      <Label htmlFor="access-pengaturan" className="font-medium cursor-pointer">Pengaturan Sistem</Label>
+                    </div>
+                    <div className="flex items-center space-x-3 border p-3 rounded-lg bg-slate-50">
+                      <input type="checkbox" id="access-rekap" checked={adminAccessRekapitulasi} onChange={(e) => setAdminAccessRekapitulasi(e.target.checked)} className="rounded h-5 w-5 text-primary" />
+                      <Label htmlFor="access-rekap" className="font-medium cursor-pointer">Rekapitulasi</Label>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+          </TabsContent>
+          )}
+
+
+          {(userRole === "owner" || adminAccessRekapitulasi) && (
             <TabsContent value="rekapitulasi">
               <div className="mb-8 flex justify-between items-end">
                 <div>
