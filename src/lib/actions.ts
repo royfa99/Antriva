@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { queues, doctors, schedules, settings, patients } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { and, eq, sql, inArray } from "drizzle-orm";
+import { and, eq, sql, inArray, not } from "drizzle-orm";
 import { getWIBDateString } from "./utils";
 import { eventEmitter } from "@/lib/eventEmitter";
 import { user } from "@/db/schema";
@@ -421,4 +421,117 @@ export async function deletePatient(patientId: string) {
   ));
 
   return true;
+}
+
+
+// Admin actions for Patient Management
+export async function adminAddUser(name: string, whatsapp: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || (session.user.role !== "admin" && session.user.role !== "owner")) return { error: "Unauthorized" };
+
+  const email = `${whatsapp}@klinik.local`;
+  
+  const existing = await db.query.user.findFirst({ where: eq(user.whatsapp, whatsapp) });
+  if (existing) return { error: "Nomor WhatsApp sudah terdaftar." };
+
+  try {
+     const res = await auth.api.signUpEmail({
+       body: { email, password: "password123", name, whatsapp, role: "patient" },
+       headers: new Headers()
+     });
+     
+     return { success: true };
+  } catch (e: any) {
+     return { error: e.message || "Gagal membuat pasien" };
+  }
+}
+
+export async function adminUpdateUser(userId: string, data: { name: string, whatsapp: string }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || (session.user.role !== "admin" && session.user.role !== "owner")) return { error: "Unauthorized" };
+
+  const existing = await db.query.user.findFirst({ where: and(eq(user.whatsapp, data.whatsapp), not(eq(user.id, userId))) });
+  if (existing) return { error: "Nomor WhatsApp sudah digunakan oleh pasien lain." };
+
+  await db.update(user).set({
+    name: data.name,
+    whatsapp: data.whatsapp,
+    email: `${data.whatsapp}@klinik.local`,
+    updatedAt: new Date()
+  }).where(eq(user.id, userId));
+
+  return { success: true };
+}
+
+export async function adminDeleteUser(userId: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || (session.user.role !== "admin" && session.user.role !== "owner")) return { error: "Unauthorized" };
+
+  // check active queues
+  const activeQ = await db.query.queues.findFirst({
+    where: and(
+      eq(queues.userId, userId),
+      inArray(queues.status, ['menunggu', 'dipanggil'])
+    )
+  });
+  if (activeQ) return { error: "Tidak dapat menghapus akun karena pasien atau anggota keluarganya sedang dalam antrian aktif." };
+
+  // Need to import account and session schema tables at the top of the file if they are missing
+  // Actually, I can just use db.delete without checking if they exist in schema imports? 
+  // Let's import them if they are not imported.
+  // Wait, I will just append the imports manually or use drizzle strings if needed.
+  // We can just rely on the existing schema imports at the top of actions.ts.
+  
+  // Wait, I can just use raw sql to delete them if I don't want to import.
+  // Let's assume we will add imports if needed.
+  
+  await db.delete(queues).where(eq(queues.userId, userId));
+  await db.delete(patients).where(eq(patients.userId, userId));
+  
+  // It's safer to use raw sql for tables we didn't import to avoid modifying top of file.
+  await db.execute(sql`DELETE FROM "session" WHERE "userId" = ${userId}`);
+  await db.execute(sql`DELETE FROM "account" WHERE "userId" = ${userId}`);
+  await db.delete(user).where(eq(user.id, userId));
+
+  return { success: true };
+}
+
+export async function adminAddFamilyMember(userId: string, name: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || (session.user.role !== "admin" && session.user.role !== "owner")) return { error: "Unauthorized" };
+
+  await db.insert(patients).values({
+    id: crypto.randomUUID(),
+    userId,
+    name,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
+
+  return { success: true };
+}
+
+export async function adminUpdateFamilyMember(patientId: string, name: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || (session.user.role !== "admin" && session.user.role !== "owner")) return { error: "Unauthorized" };
+
+  await db.update(patients).set({ name, updatedAt: new Date() }).where(eq(patients.id, patientId));
+  return { success: true };
+}
+
+export async function adminDeleteFamilyMember(patientId: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || (session.user.role !== "admin" && session.user.role !== "owner")) return { error: "Unauthorized" };
+
+  const activeQueues = await db.query.queues.findFirst({
+    where: and(
+      eq(queues.patientId, patientId),
+      inArray(queues.status, ['menunggu', 'dipanggil'])
+    )
+  });
+
+  if (activeQueues) return { error: "Tidak dapat menghapus anggota keluarga karena sedang dalam antrian aktif." };
+
+  await db.delete(patients).where(eq(patients.id, patientId));
+  return { success: true };
 }

@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { callNextQueue, recallQueue, finishCurrentQueue, callSpecificQueue, addDoctor, updateDoctor, deleteSchedule, updateSetting, toggleAttendance } from "@/lib/actions";
-import { LogOut, LayoutDashboard, Users, UserCheck, Stethoscope, Trash2, Edit, Volume2, VolumeX, Hand } from "lucide-react";
+import { callNextQueue, recallQueue, finishCurrentQueue, callSpecificQueue, addDoctor, updateDoctor, deleteSchedule, updateSetting, toggleAttendance, adminAddUser, adminUpdateUser, adminDeleteUser, adminAddFamilyMember, adminUpdateFamilyMember, adminDeleteFamilyMember } from "@/lib/actions";
+import { LogOut, LayoutDashboard, Users, UserCheck, Stethoscope, Trash2, Edit, Volume2, VolumeX, Hand, Plus } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -48,6 +48,17 @@ export default function AdminDashboard() {
   const [bellSound, setBellSound] = useState("/bell.mp3");
   
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Patient Management State
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [isFamilyDialogOpen, setIsFamilyDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingFamily, setEditingFamily] = useState<any>(null);
+  const [patientName, setPatientName] = useState("");
+  const [patientWhatsapp, setPatientWhatsapp] = useState("");
+  const [familyMemberName, setFamilyMemberName] = useState("");
+  const [selectedParentUser, setSelectedParentUser] = useState<any>(null);
+
 
   const prevDataRef = useRef<any[]>([]);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
@@ -317,6 +328,94 @@ export default function AdminDashboard() {
       await fetchData();
     } catch (e: any) {
       alert(e.message || "Gagal menyelesaikan antrian");
+    }
+  };
+
+  
+  const openUserDialog = (user: any = null) => {
+    if (user) {
+      setEditingUser(user);
+      setPatientName(user.name);
+      setPatientWhatsapp(user.whatsapp || "");
+    } else {
+      setEditingUser(null);
+      setPatientName("");
+      setPatientWhatsapp("");
+    }
+    setIsUserDialogOpen(true);
+  };
+
+  const handleSaveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      if (editingUser) {
+        const res = await adminUpdateUser(editingUser.id, { name: patientName, whatsapp: patientWhatsapp });
+        if (res.error) throw new Error(res.error);
+      } else {
+        const res = await adminAddUser(patientName, patientWhatsapp);
+        if (res.error) throw new Error(res.error);
+      }
+      setIsUserDialogOpen(false);
+      fetchPatients();
+    } catch (err: any) {
+      alert(err.message || "Gagal menyimpan data pasien");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus akun ini beserta seluruh anggota keluarganya?")) return;
+    try {
+      const res = await adminDeleteUser(id);
+      if (res.error) throw new Error(res.error);
+      fetchPatients();
+    } catch (err: any) {
+      alert(err.message || "Gagal menghapus akun");
+    }
+  };
+
+  const openFamilyDialog = (parentUser: any, member: any = null) => {
+    setSelectedParentUser(parentUser);
+    if (member) {
+      setEditingFamily(member);
+      setFamilyMemberName(member.name);
+    } else {
+      setEditingFamily(null);
+      setFamilyMemberName("");
+    }
+    setIsFamilyDialogOpen(true);
+  };
+
+  const handleSaveFamily = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      if (editingFamily) {
+        const res = await adminUpdateFamilyMember(editingFamily.id, familyMemberName);
+        if (res.error) throw new Error(res.error);
+      } else {
+        const res = await adminAddFamilyMember(selectedParentUser.id, familyMemberName);
+        if (res.error) throw new Error(res.error);
+      }
+      setIsFamilyDialogOpen(false);
+      fetchPatients();
+    } catch (err: any) {
+      alert(err.message || "Gagal menyimpan data anggota keluarga");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteFamily = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus anggota keluarga ini?")) return;
+    try {
+      const res = await adminDeleteFamilyMember(id);
+      if (res.error) throw new Error(res.error);
+      fetchPatients();
+    } catch (err: any) {
+      alert(err.message || "Gagal menghapus anggota keluarga");
     }
   };
 
@@ -622,9 +721,14 @@ export default function AdminDashboard() {
                   <h2 className="text-3xl font-bold text-slate-800">Database Pasien</h2>
                   <p className="text-muted-foreground mt-1">Daftar semua pengguna dan pasien yang terdaftar di sistem.</p>
                 </div>
-                <Button onClick={() => fetchPatients()} variant="outline" className="shadow-sm">
-                  Refresh Data
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={() => openUserDialog()} className="shadow-sm bg-green-600 hover:bg-green-700 text-white">
+                    <Plus className="w-4 h-4 mr-2" /> Tambah Akun
+                  </Button>
+                  <Button onClick={() => fetchPatients()} variant="outline" className="shadow-sm">
+                    Refresh Data
+                  </Button>
+                </div>
               </div>
 
               <Card className="shadow-lg overflow-hidden border-t-4 border-t-primary">
@@ -636,6 +740,7 @@ export default function AdminDashboard() {
                       <TableHead className="font-bold">Email</TableHead>
                       <TableHead className="font-bold">Anggota Keluarga (Pasien Tambahan)</TableHead>
                       <TableHead className="font-bold">Tgl Mendaftar</TableHead>
+                      <TableHead className="text-right font-bold">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -648,7 +753,19 @@ export default function AdminDashboard() {
                           {user.family && user.family.length > 0 ? (
                             <ul className="list-disc list-inside">
                               {user.family.map((member: any) => (
-                                <li key={member.id} className="text-sm">{member.name}</li>
+                                
+                                <li key={member.id} className="text-sm flex items-center justify-between py-1 border-b last:border-0 border-slate-100">
+                                  <span>{member.name}</span>
+                                  <div className="flex items-center gap-1">
+                                    <button onClick={() => openFamilyDialog(user, member)} className="text-blue-500 hover:text-blue-700 p-1" title="Edit">
+                                      <Edit className="w-3 h-3" />
+                                    </button>
+                                    <button onClick={() => handleDeleteFamily(member.id)} className="text-red-500 hover:text-red-700 p-1" title="Hapus">
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </li>
+
                               ))}
                             </ul>
                           ) : (
@@ -656,11 +773,23 @@ export default function AdminDashboard() {
                           )}
                         </TableCell>
                         <TableCell>{new Date(user.createdAt).toLocaleDateString('id-ID')}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          <Button variant="ghost" size="sm" onClick={() => openFamilyDialog(user)} className="text-green-600 hover:text-green-800 hover:bg-green-50 mr-1" title="Tambah Anggota">
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => openUserDialog(user)} className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 mr-1" title="Edit Akun">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(user.id)} className="text-red-600 hover:text-red-800 hover:bg-red-50" title="Hapus Akun">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+
                       </TableRow>
                     ))}
                     {patientsData.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                           Belum ada pasien yang mendaftar.
                         </TableCell>
                       </TableRow>
