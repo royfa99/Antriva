@@ -320,6 +320,11 @@ export default function AdminDashboard() {
       await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("monitor_schedules", JSON.stringify(monitorSchedules));
       await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("voice_template", voiceTemplate);
       await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("bell_sound", bellSound);
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("admin_access_antrian", adminAccessAntrian.toString());
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("admin_access_pasien", adminAccessPasien.toString());
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("admin_access_dokter", adminAccessDokter.toString());
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("admin_access_pengaturan", adminAccessPengaturan.toString());
+      await (async (...args) => { const r = await updateSetting(...args); if (r && typeof r === "object" && "error" in r && typeof (r as any).error === "string") throw new Error((r as any).error); return r; })("admin_access_rekapitulasi", adminAccessRekapitulasi.toString());
       alert("Pengaturan berhasil disimpan.");
     } catch (e: any) {
       alert(e.message || "Gagal menyimpan pengaturan");
