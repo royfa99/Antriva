@@ -101,9 +101,6 @@ export default async function Home() {
 
       <footer className="border-t bg-white py-8 text-center text-slate-500 text-sm">
         <p>&copy; {new Date().getFullYear()} {clinicName}. All rights reserved.</p>
-        <div className="mt-4">
-          <Link href="/monitor" className="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-4">Buka Monitor TV Klinik</Link>
-        </div>
       </footer>
     </div>
   );
