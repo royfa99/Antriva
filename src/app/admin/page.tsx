@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { callNextQueue, recallQueue, finishCurrentQueue, callSpecificQueue, addDoctor, updateDoctor, deleteSchedule, updateSetting, toggleAttendance, adminAddUser, adminUpdateUser, adminDeleteUser, adminAddFamilyMember, adminUpdateFamilyMember, adminDeleteFamilyMember, adminTakeQueue } from "@/lib/actions";
-import { LogOut, LayoutDashboard, Users, UserCheck, Stethoscope, Trash2, Edit, Volume2, VolumeX, Hand, Plus, CalendarCheck } from "lucide-react";
+import { LogOut, LayoutDashboard, Users, UserCheck, Stethoscope, Trash2, Edit, Volume2, VolumeX, Hand, Plus, CalendarCheck, Search } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -73,6 +73,7 @@ export default function AdminDashboard() {
   const [queueRegisterTarget, setQueueRegisterTarget] = useState<any>(null); // { parentUser, member }
   const [selectedScheduleId, setSelectedScheduleId] = useState("");
   const [registerDate, setRegisterDate] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
 
 
@@ -565,6 +566,15 @@ export default function AdminDashboard() {
     return acc;
   }, {} as Record<string, any[]>);
 
+  const filteredPatientsData = patientsData.filter(user => {
+    const q = searchQuery.toLowerCase();
+    const userMatch = user.name.toLowerCase().includes(q) || (user.norm && user.norm.toLowerCase().includes(q));
+    const familyMatch = user.family && user.family.some((member: any) => 
+      member.name.toLowerCase().includes(q) || (member.norm && member.norm.toLowerCase().includes(q))
+    );
+    return userMatch || familyMatch;
+  });
+
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-10">
@@ -791,12 +801,22 @@ export default function AdminDashboard() {
 
           {(userRole === "owner" || adminAccessPasien) && (
             <TabsContent value="pasien">
-              <div className="mb-8 flex justify-between items-end">
+              <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
                   <h2 className="text-3xl font-bold text-slate-800">Database Pasien</h2>
                   <p className="text-muted-foreground mt-1">Daftar semua pengguna dan pasien yang terdaftar di sistem.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                  <div className="relative flex-1 md:w-64">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Cari nama atau No. RM..."
+                      className="pl-8 shadow-sm"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
                   <Button onClick={() => openUserDialog()} className="shadow-sm bg-green-600 hover:bg-green-700 text-white">
                     <Plus className="w-4 h-4 mr-2" /> Tambah Akun
                   </Button>
@@ -820,7 +840,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {patientsData.map((user) => (
+                    {filteredPatientsData.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-bold text-slate-800">{user.name}</TableCell>
                         <TableCell>{user.whatsapp || '-'}</TableCell>
@@ -870,10 +890,10 @@ export default function AdminDashboard() {
 
                       </TableRow>
                     ))}
-                    {patientsData.length === 0 && (
+                    {filteredPatientsData.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
-                          Belum ada pasien yang mendaftar.
+                          {patientsData.length === 0 ? "Belum ada pasien yang mendaftar." : "Tidak ada pasien yang cocok dengan pencarian."}
                         </TableCell>
                       </TableRow>
                     )}
